@@ -8,6 +8,7 @@ import authRouter from "./routers/auth.route.js"
 const app = express()
 
 app.use(cors())
+app.use(express.json())
 
 app.use(async (req, res, next) => {
   try {
@@ -20,8 +21,6 @@ app.use(async (req, res, next) => {
 })
 
 app.use(authRouter)
-
-app.use(express.json())
 
 app.get("/health", (req, res) => {
   res.send({ message: "server is healthy" })

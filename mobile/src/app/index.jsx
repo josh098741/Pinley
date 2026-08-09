@@ -15,10 +15,11 @@ const LOGO = require("../../assets/images/pinley_image.png");
 function SignedInHome() {
   const { user } = useUser();
   const { signOut } = useClerk();
-  const { getToken } = useAuth();
+  const { getToken, isSignedIn, sessionId } = useAuth();
   const [syncState, setSyncState] = useState("syncing");
 
   useEffect(() => {
+    if (!isSignedIn || !sessionId) return;
     let cancelled = false;
 
     const performSync = async () => {
@@ -54,7 +55,7 @@ function SignedInHome() {
     return () => {
       cancelled = true;
     };
-  }, [user?.id, getToken]);
+  }, [isSignedIn, sessionId, getToken]);
 
   const syncColor = syncState === "synced" ? "text-green-400" : "text-amber-400";
   const syncText =

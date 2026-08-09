@@ -10,8 +10,9 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { useSSO, useSignIn, useSignUp } from "@clerk/clerk-expo";
+import { useSSO, useSignIn, useSignUp, useAuth } from "@clerk/clerk-expo";
 import * as Linking from "expo-linking";
+import { syncUserToDatabase } from "../utils/api";
 
 const LOGO = require("../../assets/images/pinley_image.png");
 
@@ -27,6 +28,18 @@ export default function AuthScreen() {
   const { isLoaded: signInLoaded, signIn, setActive: setSignInActive } = useSignIn();
   const { isLoaded: signUpLoaded, signUp, setActive: setSignUpActive } = useSignUp();
   const { startSSOFlow } = useSSO();
+  const { getToken } = useAuth();
+
+  const syncNow = async () => {
+    try {
+      const token = await getToken();
+      if (token) {
+        await syncUserToDatabase(token);
+      }
+    } catch (err) {
+      console.error("Account sync after sign in failed:", err);
+    }
+  };
 
   const isSignUp = mode === "signUp";
   const loaded = isSignUp ? signUpLoaded : signInLoaded;
@@ -43,6 +56,7 @@ export default function AuthScreen() {
       });
       if (createdSessionId) {
         await setSSOActive?.({ session: createdSessionId });
+        await syncNow();
       }
     } catch (err) {
       setError(
@@ -64,6 +78,7 @@ export default function AuthScreen() {
         const result = await signUp.create({ emailAddress: email, password });
         if (result.status === "complete") {
           await setActive({ session: result.createdSessionId });
+          await syncNow();
           return;
         }
         await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
@@ -72,6 +87,7 @@ export default function AuthScreen() {
         const result = await signIn.create({ identifier: email, password });
         if (result.status === "complete") {
           await setActive({ session: result.createdSessionId });
+          await syncNow();
         } else {
           setError("Additional sign-in steps are required. Please try again.");
         }
@@ -95,6 +111,7 @@ export default function AuthScreen() {
       const result = await signUp.attemptEmailAddressVerification({ code });
       if (result.status === "complete") {
         await setActive({ session: result.createdSessionId });
+        await syncNow();
       } else {
         setError("Verification was not completed. Please try again.");
       }
