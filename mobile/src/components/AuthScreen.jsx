@@ -11,6 +11,7 @@ import {
   View,
 } from "react-native";
 import { useSSO, useSignIn, useSignUp } from "@clerk/clerk-expo";
+import * as Linking from "expo-linking";
 
 const LOGO = require("../../assets/images/pinley_image.png");
 
@@ -35,8 +36,10 @@ export default function AuthScreen() {
     setError("");
     setLoading(true);
     try {
+      const redirectUrl = Linking.createURL("/");
       const { createdSessionId, setActive: setSSOActive } = await startSSOFlow({
         strategy: "oauth_google",
+        redirectUrl,
       });
       if (createdSessionId) {
         await setSSOActive?.({ session: createdSessionId });
