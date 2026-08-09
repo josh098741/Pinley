@@ -5,7 +5,7 @@ import { requireAuth } from "../middleware/requireAuth.js"
 
 const router = Router()
 
-router.post("/webhook", express.raw({ type: "application/json" }), clerkWebhook)
+router.post("/webhook", express.raw({ type: "*/*" }), clerkWebhook)
 router.get("/api/auth/me", requireAuth, getCurrentUser)
 router.post("/api/auth/sync", requireAuth, syncUser)
 

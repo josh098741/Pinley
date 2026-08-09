@@ -72,8 +72,16 @@ const deleteUser = async (data) => {
 export const clerkWebhook = async (req, res) => {
   try {
     if (!webhook) {
+      console.error("Webhook failed: CLERK_WEBHOOK_SECRET is not configured")
       return res.status(500).json({ message: "CLERK_WEBHOOK_SECRET is not configured" })
     }
+
+    const payload =
+      req.body instanceof Buffer
+        ? req.body.toString("utf8")
+        : typeof req.body === "string"
+        ? req.body
+        : JSON.stringify(req.body)
 
     const headers = {
       "svix-id": req.headers["svix-id"],
@@ -81,17 +89,26 @@ export const clerkWebhook = async (req, res) => {
       "svix-signature": req.headers["svix-signature"],
     }
 
-    const event = webhook.verify(req.body, headers)
+    let event
+    try {
+      event = webhook.verify(payload, headers)
+    } catch (verifyErr) {
+      console.error("Webhook verification failed:", verifyErr.message)
+      return res.status(400).json({ message: `Webhook verification failed: ${verifyErr.message}` })
+    }
 
     const { type, data } = event
+    console.log(`Received Clerk Webhook event: ${type} for user: ${data?.id}`)
 
     switch (type) {
       case "user.created":
       case "user.updated":
         await upsertUser(data)
+        console.log(`Successfully synced user ${data?.id} to MongoDB via webhook`)
         break
       case "user.deleted":
         await deleteUser(data)
+        console.log(`Successfully deleted user ${data?.id} from MongoDB via webhook`)
         break
       default:
         break
@@ -99,8 +116,8 @@ export const clerkWebhook = async (req, res) => {
 
     return res.status(200).json({ received: true, type })
   } catch (error) {
-    console.error("Webhook verification failed:", error.message)
-    return res.status(400).json({ message: "Webhook verification failed" })
+    console.error("Error processing Clerk webhook:", error)
+    return res.status(500).json({ message: "Internal server error processing webhook" })
   }
 }
 
