@@ -1,4 +1,5 @@
-import { clerkClient } from "../utils/clerk.js"
+import { verifyToken } from "@clerk/backend"
+import { env } from "../utils/env.js"
 
 export const requireAuth = async (req, res, next) => {
   try {
@@ -9,11 +10,15 @@ export const requireAuth = async (req, res, next) => {
     }
 
     const token = header.slice(7)
-    const payload = await clerkClient.verifyToken(token)
+    const payload = await verifyToken(token, {
+      secretKey: env.CLERK_SECRET_KEY,
+    })
 
     req.auth = payload
     next()
   } catch (error) {
+    console.error("Authentication error in requireAuth:", error?.message || error)
     return res.status(401).json({ message: "Unauthorized" })
   }
 }
+

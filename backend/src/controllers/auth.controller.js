@@ -9,7 +9,7 @@ const upsertUser = async (data) => {
   const primaryEmail =
     data.email_addresses?.find((e) => e.id === data.primary_email_address_id)?.email_address ??
     data.email_addresses?.[0]?.email_address ??
-    ""
+    `${data.id}@noemail.clerk`
 
   const payload = {
     clerkUserId: data.id,
@@ -35,7 +35,7 @@ export const syncUser = async (req, res) => {
     const primaryEmail =
       clerkUser.emailAddresses?.find((e) => e.id === clerkUser.primaryEmailAddressId)?.emailAddress ??
       clerkUser.emailAddresses?.[0]?.emailAddress ??
-      ""
+      `${clerkUser.id}@noemail.clerk`
 
     const payload = {
       clerkUserId: clerkUser.id,
@@ -101,10 +101,31 @@ export const clerkWebhook = async (req, res) => {
 
 export const getCurrentUser = async (req, res) => {
   try {
-    const user = await User.findOne({ clerkUserId: req.auth.sub })
+    let user = await User.findOne({ clerkUserId: req.auth.sub })
 
     if (!user) {
-      return res.status(404).json({ message: "User not found" })
+      const clerkUser = await clerkClient.users.getUser(req.auth.sub)
+
+      const primaryEmail =
+        clerkUser.emailAddresses?.find((e) => e.id === clerkUser.primaryEmailAddressId)?.emailAddress ??
+        clerkUser.emailAddresses?.[0]?.emailAddress ??
+        `${clerkUser.id}@noemail.clerk`
+
+      const payload = {
+        clerkUserId: clerkUser.id,
+        email: primaryEmail,
+        firstName: clerkUser.firstName || "",
+        lastName: clerkUser.lastName || "",
+        username: clerkUser.username || "",
+        imageUrl: clerkUser.imageUrl || "",
+        emailAddresses: clerkUser.emailAddresses?.map((e) => e.emailAddress) || [],
+      }
+
+      user = await User.findOneAndUpdate({ clerkUserId: clerkUser.id }, payload, {
+        new: true,
+        upsert: true,
+        setDefaultsOnInsert: true,
+      })
     }
 
     return res.status(200).json({ user })
@@ -113,3 +134,4 @@ export const getCurrentUser = async (req, res) => {
     return res.status(500).json({ message: "Internal server error" })
   }
 }
+

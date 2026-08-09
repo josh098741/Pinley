@@ -9,6 +9,16 @@ const app = express()
 
 app.use(cors())
 
+app.use(async (req, res, next) => {
+  try {
+    await connectDB()
+    next()
+  } catch (error) {
+    console.error("Database connection failure:", error)
+    return res.status(500).json({ message: "Internal database connection error" })
+  }
+})
+
 app.use(authRouter)
 
 app.use(express.json())
@@ -33,3 +43,4 @@ if (process.env.NODE_ENV !== "production") {
 }
 
 export default app
+
