@@ -3,5 +3,7 @@ dotenv.config({ quiet: true })
 
 export const env = {
     PORT: process.env.PORT || 5000,
-    MONGODB_URI: process.env.MONGODB_URI
+    MONGODB_URI: process.env.MONGODB_URI,
+    CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY,
+    CLERK_PUBLISHABLE_KEY: process.env.CLERK_PUBLISHABLE_KEY
 }
