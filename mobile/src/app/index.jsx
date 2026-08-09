@@ -29,7 +29,8 @@ function SignedInHome() {
         if (!cancelled) {
           setSyncState(dbUser?.clerkUserId === user?.id ? "synced" : "synced");
         }
-      } catch (_err) {
+      } catch (err) {
+        console.error("Account sync error:", err);
         if (!cancelled) setSyncState("error");
       }
     })();

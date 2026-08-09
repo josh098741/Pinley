@@ -22,7 +22,7 @@ const upsertUser = async (data) => {
   }
 
   return User.findOneAndUpdate({ clerkUserId: data.id }, payload, {
-    new: true,
+    returnDocument: "after",
     upsert: true,
     setDefaultsOnInsert: true,
   })
@@ -48,7 +48,7 @@ export const syncUser = async (req, res) => {
     }
 
     const user = await User.findOneAndUpdate({ clerkUserId: clerkUser.id }, payload, {
-      new: true,
+      returnDocument: "after",
       upsert: true,
       setDefaultsOnInsert: true,
     })
@@ -122,7 +122,7 @@ export const getCurrentUser = async (req, res) => {
       }
 
       user = await User.findOneAndUpdate({ clerkUserId: clerkUser.id }, payload, {
-        new: true,
+        returnDocument: "after",
         upsert: true,
         setDefaultsOnInsert: true,
       })
