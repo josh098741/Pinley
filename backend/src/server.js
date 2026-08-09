@@ -10,7 +10,6 @@ app.get("/health", (req,res) => {
     res.send({message: "server is healthy"})
 })
 
-
 const start = async () => {
     try{
         await connectDB()

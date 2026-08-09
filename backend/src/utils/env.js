@@ -5,5 +5,6 @@ export const env = {
     PORT: process.env.PORT || 5000,
     MONGODB_URI: process.env.MONGODB_URI,
     CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY,
-    CLERK_PUBLISHABLE_KEY: process.env.CLERK_PUBLISHABLE_KEY
+    CLERK_PUBLISHABLE_KEY: process.env.CLERK_PUBLISHABLE_KEY,
+    SERVER_URL: process.env.SERVER_URL
 }
