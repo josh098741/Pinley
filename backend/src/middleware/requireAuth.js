@@ -1,7 +1,4 @@
-import { createClerkClient } from "@clerk/backend"
-import { env } from "../utils/env.js"
-
-const clerkClient = createClerkClient({ secretKey: env.CLERK_SECRET_KEY })
+import { clerkClient } from "../utils/clerk.js"
 
 export const requireAuth = async (req, res, next) => {
   try {

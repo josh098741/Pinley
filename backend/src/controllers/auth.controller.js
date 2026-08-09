@@ -1,5 +1,6 @@
 import { Webhook } from "svix"
 import { env } from "../utils/env.js"
+import { clerkClient } from "../utils/clerk.js"
 import User from "../models/user.models.js"
 
 const webhook = env.CLERK_WEBHOOK_SECRET ? new Webhook(env.CLERK_WEBHOOK_SECRET) : null
@@ -25,6 +26,38 @@ const upsertUser = async (data) => {
     upsert: true,
     setDefaultsOnInsert: true,
   })
+}
+
+export const syncUser = async (req, res) => {
+  try {
+    const clerkUser = await clerkClient.users.getUser(req.auth.sub)
+
+    const primaryEmail =
+      clerkUser.emailAddresses?.find((e) => e.id === clerkUser.primaryEmailAddressId)?.emailAddress ??
+      clerkUser.emailAddresses?.[0]?.emailAddress ??
+      ""
+
+    const payload = {
+      clerkUserId: clerkUser.id,
+      email: primaryEmail,
+      firstName: clerkUser.firstName || "",
+      lastName: clerkUser.lastName || "",
+      username: clerkUser.username || "",
+      imageUrl: clerkUser.imageUrl || "",
+      emailAddresses: clerkUser.emailAddresses?.map((e) => e.emailAddress) || [],
+    }
+
+    const user = await User.findOneAndUpdate({ clerkUserId: clerkUser.id }, payload, {
+      new: true,
+      upsert: true,
+      setDefaultsOnInsert: true,
+    })
+
+    return res.status(200).json({ user })
+  } catch (error) {
+    console.error("Error syncing user to database:", error)
+    return res.status(500).json({ message: "Internal server error" })
+  }
 }
 
 const deleteUser = async (data) => {
