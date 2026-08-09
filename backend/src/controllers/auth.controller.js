@@ -30,7 +30,12 @@ const upsertUser = async (data) => {
 
 export const syncUser = async (req, res) => {
   try {
-    const clerkUser = await clerkClient.users.getUser(req.auth.sub)
+    const userId = req.auth?.sub || req.auth?.userId
+    if (!userId) {
+      return res.status(400).json({ message: "Invalid user ID in authentication token" })
+    }
+
+    const clerkUser = await clerkClient.users.getUser(userId)
 
     const primaryEmail =
       clerkUser.emailAddresses?.find((e) => e.id === clerkUser.primaryEmailAddressId)?.emailAddress ??
@@ -101,10 +106,15 @@ export const clerkWebhook = async (req, res) => {
 
 export const getCurrentUser = async (req, res) => {
   try {
-    let user = await User.findOne({ clerkUserId: req.auth.sub })
+    const userId = req.auth?.sub || req.auth?.userId
+    if (!userId) {
+      return res.status(400).json({ message: "Invalid user ID in authentication token" })
+    }
+
+    let user = await User.findOne({ clerkUserId: userId })
 
     if (!user) {
-      const clerkUser = await clerkClient.users.getUser(req.auth.sub)
+      const clerkUser = await clerkClient.users.getUser(userId)
 
       const primaryEmail =
         clerkUser.emailAddresses?.find((e) => e.id === clerkUser.primaryEmailAddressId)?.emailAddress ??

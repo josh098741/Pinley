@@ -21,19 +21,35 @@ function SignedInHome() {
   useEffect(() => {
     let cancelled = false;
 
-    (async () => {
-      try {
-        const token = await getToken();
-        if (!token) throw new Error("No session token");
-        const { user: dbUser } = await syncUserToDatabase(token);
-        if (!cancelled) {
-          setSyncState(dbUser?.clerkUserId === user?.id ? "synced" : "synced");
+    const performSync = async () => {
+      let attempts = 0;
+      const maxAttempts = 5;
+
+      while (attempts < maxAttempts && !cancelled) {
+        try {
+          const token = await getToken();
+          if (token) {
+            const res = await syncUserToDatabase(token);
+            if (res?.user && !cancelled) {
+              setSyncState("synced");
+              return;
+            }
+          }
+        } catch (err) {
+          console.error(`Account sync attempt ${attempts + 1} error:`, err);
         }
-      } catch (err) {
-        console.error("Account sync error:", err);
-        if (!cancelled) setSyncState("error");
+        attempts++;
+        if (attempts < maxAttempts && !cancelled) {
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+        }
       }
-    })();
+
+      if (!cancelled) {
+        setSyncState("error");
+      }
+    };
+
+    performSync();
 
     return () => {
       cancelled = true;
