@@ -1,6 +1,8 @@
 import express from "express"
 import { env } from "./utils/env.js"
 
+import { connectDB } from "./database/db.js"
+
 const app = express()
 
 
@@ -11,6 +13,7 @@ app.get("/health", (req,res) => {
 
 const start = async () => {
     try{
+        await connectDB()
         app.listen(env.PORT, () => {
             console.log(`Server is running on port ${env.PORT}`)
         })
