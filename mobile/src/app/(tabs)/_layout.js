@@ -1,6 +1,6 @@
 import { Redirect, Tabs } from "expo-router";
 import { SignedIn, SignedOut } from "@clerk/clerk-expo";
-import { Platform, StyleSheet, Text, View } from "react-native";
+import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { BlurView } from "expo-blur";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -15,11 +15,7 @@ function TabBarIcon({ icon, label, active }) {
         size={22}
         color={active ? ACTIVE : INACTIVE}
       />
-      <Text 
-        numberOfLines={1} 
-        adjustsFontSizeToFit 
-        style={[styles.tabLabel, { color: active ? ACTIVE : INACTIVE }]}
-      >
+      <Text style={[styles.tabLabel, { color: active ? ACTIVE : INACTIVE }]}>
         {label}
       </Text>
     </View>
@@ -27,14 +23,56 @@ function TabBarIcon({ icon, label, active }) {
 }
 
 function GlassBackground() {
-  return (
-    <View style={StyleSheet.absoluteFill}>
+  if (Platform.OS === "ios") {
+    return (
       <BlurView
-        intensity={Platform.OS === "ios" ? 85 : 100}
-        tint={Platform.OS === "ios" ? "systemChromeMaterialDark" : "dark"}
-        style={styles.tabBarBg}
+        intensity={85}
+        tint="systemChromeMaterialDark"
+        style={StyleSheet.absoluteFill}
       />
-      <View style={[styles.tabBarBg, styles.purpleOverlay]} />
+    );
+  }
+  return <View style={[StyleSheet.absoluteFill, styles.tabBarBgAndroid]} />;
+}
+
+function CustomTabBar({ state, descriptors, navigation }) {
+  return (
+    <View style={styles.tabBarWrapper}>
+      <View style={styles.tabBarPill}>
+        <GlassBackground />
+        <View style={styles.tabRow}>
+          {state.routes.map((route, index) => {
+            const { options } = descriptors[route.key];
+            const isFocused = state.index === index;
+            const onPress = () => {
+              const event = navigation.emit({
+                type: "tabPress",
+                target: route.key,
+                canPreventDefault: true,
+              });
+              if (!isFocused && !event.defaultPrevented) {
+                navigation.navigate(route.name, route.params);
+              }
+            };
+            return (
+              <Pressable
+                key={route.key}
+                onPress={onPress}
+                style={styles.tabButton}
+                accessibilityRole="button"
+                accessibilityLabel={options.tabBarAccessibilityLabel}
+                accessibilityState={isFocused ? { selected: true } : {}}
+              >
+                {options.tabBarIcon({
+                  focused: isFocused,
+                  color: isFocused ? ACTIVE : INACTIVE,
+                  size: 22,
+                })}
+              </Pressable>
+            );
+          })}
+        </View>
+      </View>
     </View>
   );
 }
@@ -52,9 +90,8 @@ export default function TabsLayout() {
             tabBarShowLabel: false,
             tabBarActiveTintColor: ACTIVE,
             tabBarInactiveTintColor: INACTIVE,
-            tabBarStyle: styles.tabBar,
-            tabBarBackground: () => <GlassBackground />,
           }}
+          tabBar={(props) => <CustomTabBar {...props} />}
         >
           <Tabs.Screen
             name="index"
@@ -81,46 +118,55 @@ export default function TabsLayout() {
 }
 
 const styles = StyleSheet.create({
-  tabBar: {
+  tabBarWrapper: {
     position: "absolute",
     bottom: 24,
     left: 24,
     right: 24,
     height: 68,
-    borderRadius: 34,
-    borderTopWidth: 0,
-    backgroundColor: "transparent",
-    elevation: 0,
     shadowColor: "#000",
     shadowOpacity: 0.3,
     shadowRadius: 18,
     shadowOffset: { width: 0, height: 10 },
+    elevation: 10,
   },
-  tabBarBg: {
-    ...StyleSheet.absoluteFillObject,
+  tabBarPill: {
+    flex: 1,
     borderRadius: 34,
     overflow: "hidden",
     borderWidth: 1.5,
     borderColor: "rgba(255,255,255,0.15)",
     borderTopColor: "rgba(255,255,255,0.3)",
     borderBottomColor: "rgba(255,255,255,0.05)",
-  },
-  purpleOverlay: {
-    backgroundColor: "rgba(147, 51, 234, 0.25)",
-    borderWidth: 0,
+    backgroundColor: "rgba(15,23,42,0.4)",
   },
   tabBarBgAndroid: {
-    backgroundColor: "rgba(15,23,42,0.5)",
+    backgroundColor: "rgba(15,23,42,0.75)",
   },
-  tabItem: {
-    width: "100%",
+  tabRow: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-around",
+  },
+  tabButton: {
     alignItems: "center",
     justifyContent: "center",
-    gap: 4,
   },
-  tabItemActive: {},
+  tabItem: {
+    width: 104,
+    height: 48,
+    borderRadius: 24,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 3,
+  },
+  tabItemActive: {
+    backgroundColor: "rgba(56,189,248,0.28)",
+  },
   tabLabel: {
     fontSize: 11,
     fontWeight: "700",
+    lineHeight: 13,
   },
 });
