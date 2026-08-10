@@ -16,8 +16,8 @@ import { syncUserToDatabase } from "../utils/api";
 
 const LOGO = require("../../assets/images/pinley_image.png");
 
-export default function AuthScreen() {
-  const [mode, setMode] = useState("signIn");
+export default function AuthScreen({ initialMode = "signIn" }) {
+  const [mode, setMode] = useState(initialMode);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [code, setCode] = useState("");

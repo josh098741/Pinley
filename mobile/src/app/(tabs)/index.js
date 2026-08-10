@@ -1,18 +1,11 @@
 import { useEffect, useState } from "react";
 import { Image, Pressable, SafeAreaView, Text, View } from "react-native";
-import {
-  SignedIn,
-  SignedOut,
-  useAuth,
-  useClerk,
-  useUser,
-} from "@clerk/clerk-expo";
-import AuthScreen from "../components/AuthScreen";
-import { syncUserToDatabase } from "../utils/api";
+import { useAuth, useClerk, useUser } from "@clerk/clerk-expo";
+import { syncUserToDatabase } from "../../utils/api.js";
 
-const LOGO = require("../../assets/images/pinley_image.png");
+const LOGO = require("../../../assets/images/pinley_image.png");
 
-function SignedInHome() {
+export default function Home() {
   const { user } = useUser();
   const { signOut } = useClerk();
   const { getToken, isSignedIn, sessionId } = useAuth();
@@ -82,18 +75,5 @@ function SignedInHome() {
         </Pressable>
       </View>
     </SafeAreaView>
-  );
-}
-
-export default function Index() {
-  return (
-    <>
-      <SignedIn>
-        <SignedInHome />
-      </SignedIn>
-      <SignedOut>
-        <AuthScreen />
-      </SignedOut>
-    </>
   );
 }
