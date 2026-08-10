@@ -36,24 +36,26 @@ import {
   Inter_600SemiBold,
   Inter_700Bold,
 } from "@expo-google-fonts/inter";
-import { API_URL } from "../../config";
+import { API_URL_CANDIDATES } from "../../config";
 
 const LOGO = require("../../../assets/images/pinley_image.png");
 
-const MAX_RETRIES = 3;
-const BACKOFF_MS = 1000;
+const REQUEST_TIMEOUT_MS = 8000;
 
 export const syncUserToDatabase = async (token) => {
   let lastError;
 
-  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+  for (const baseUrl of API_URL_CANDIDATES) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
     try {
-      const response = await fetch(`${API_URL}/api/auth/sync`, {
+      const response = await fetch(`${baseUrl}/api/auth/sync`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
+        signal: controller.signal,
       });
 
       if (!response.ok) {
@@ -63,11 +65,8 @@ export const syncUserToDatabase = async (token) => {
       return response.json();
     } catch (err) {
       lastError = err;
-      if (attempt < MAX_RETRIES - 1) {
-        await new Promise((resolve) =>
-          setTimeout(resolve, BACKOFF_MS * (attempt + 1))
-        );
-      }
+    } finally {
+      clearTimeout(timeout);
     }
   }
 

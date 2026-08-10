@@ -1,16 +1,6 @@
 import { Redirect, Tabs } from "expo-router";
 import { SignedIn, SignedOut } from "@clerk/clerk-expo";
-import { View, Text } from "react-native";
-
-function TabBarIcon({ label, active }) {
-  return (
-    <View className="items-center">
-      <Text className={`text-xs font-semibold ${active ? "text-sky-400" : "text-slate-400"}`}>
-        {label}
-      </Text>
-    </View>
-  );
-}
+import { FontAwesome } from "@expo/vector-icons";
 
 export default function TabsLayout() {
   return (
@@ -31,14 +21,18 @@ export default function TabsLayout() {
             name="index"
             options={{
               title: "Home",
-              tabBarIcon: ({ focused }) => <TabBarIcon label="Home" active={focused} />,
+              tabBarIcon: ({ color, size }) => (
+                <FontAwesome name="home" color={color} size={size} />
+              ),
             }}
           />
           <Tabs.Screen
             name="profile"
             options={{
               title: "Profile",
-              tabBarIcon: ({ focused }) => <TabBarIcon label="Profile" active={focused} />,
+              tabBarIcon: ({ color, size }) => (
+                <FontAwesome name="user" color={color} size={size} />
+              ),
             }}
           />
         </Tabs>
