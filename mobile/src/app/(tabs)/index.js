@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Image, Pressable, SafeAreaView, Text, View } from "react-native";
 import { useAuth, useClerk, useUser } from "@clerk/clerk-expo";
-import { syncUserToDatabase } from "../../utils/api.js";
+import { syncUserToDatabase } from "../(auth)/index.js";
 
 const LOGO = require("../../../assets/images/pinley_image.png");
 
@@ -10,36 +10,29 @@ export default function Home() {
   const { signOut } = useClerk();
   const { getToken, isSignedIn, sessionId } = useAuth();
   const [syncState, setSyncState] = useState("syncing");
+  const getTokenRef = useRef(getToken);
+  getTokenRef.current = getToken;
 
   useEffect(() => {
     if (!isSignedIn || !sessionId) return;
     let cancelled = false;
+    setSyncState("syncing");
 
     const performSync = async () => {
-      let attempts = 0;
-      const maxAttempts = 5;
-
-      while (attempts < maxAttempts && !cancelled) {
-        try {
-          const token = await getToken();
-          if (token) {
-            const res = await syncUserToDatabase(token);
-            if (res?.user && !cancelled) {
-              setSyncState("synced");
-              return;
-            }
-          }
-        } catch (err) {
-          console.error(`Account sync attempt ${attempts + 1} error:`, err);
+      try {
+        const token = await getTokenRef.current();
+        if (!token || cancelled) return;
+        const res = await syncUserToDatabase(token);
+        if (res?.user && !cancelled) {
+          setSyncState("synced");
+        } else if (!cancelled) {
+          setSyncState("error");
         }
-        attempts++;
-        if (attempts < maxAttempts && !cancelled) {
-          await new Promise((resolve) => setTimeout(resolve, 1000));
+      } catch (err) {
+        console.error("Account sync error:", err);
+        if (!cancelled) {
+          setSyncState("error");
         }
-      }
-
-      if (!cancelled) {
-        setSyncState("error");
       }
     };
 
@@ -48,7 +41,7 @@ export default function Home() {
     return () => {
       cancelled = true;
     };
-  }, [isSignedIn, sessionId, getToken]);
+  }, [isSignedIn, sessionId]);
 
   const syncColor = syncState === "synced" ? "text-green-400" : "text-amber-400";
   const syncText =
