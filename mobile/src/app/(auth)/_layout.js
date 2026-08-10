@@ -1,6 +1,5 @@
-import { Redirect } from "expo-router";
+import { Redirect, Stack } from "expo-router";
 import { SignedIn, SignedOut } from "@clerk/clerk-expo";
-import AuthScreen from "../../components/AuthScreen.js";
 
 export default function AuthLayout() {
   return (
@@ -9,7 +8,7 @@ export default function AuthLayout() {
         <Redirect href="/(tabs)" />
       </SignedIn>
       <SignedOut>
-        <AuthScreen />
+        <Stack screenOptions={{ headerShown: false }} />
       </SignedOut>
     </>
   );

@@ -13,9 +13,7 @@ export default function RootLayout() {
     <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
       <Stack
         screenOptions={{
-          headerStyle: { backgroundColor: "#0f172a" },
-          headerTintColor: "#fff",
-          headerTitleStyle: { fontWeight: "bold" },
+          headerShown: false,
         }}
       >
         <Stack.Screen name="index" />

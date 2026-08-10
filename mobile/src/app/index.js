@@ -8,7 +8,7 @@ export default function Index() {
         <Redirect href="/(tabs)" />
       </SignedIn>
       <SignedOut>
-        <Redirect href="/(auth)/sign-in" />
+        <Redirect href="/(auth)" />
       </SignedOut>
     </>
   );
