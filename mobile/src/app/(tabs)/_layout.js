@@ -93,6 +93,10 @@ function CustomTabBar({ state, descriptors, navigation }) {
   );
 }
 
+export const unstable_settings = {
+  initialRouteName: "Home/index",
+};
+
 export default function TabsLayout() {
   return (
     <>
@@ -110,7 +114,7 @@ export default function TabsLayout() {
           tabBar={(props) => <CustomTabBar {...props} />}
         >
           <Tabs.Screen
-            name="index"
+            name="Home/index"
             options={{
               title: "Home",
               tabBarIcon: ({ focused }) => (
@@ -119,7 +123,7 @@ export default function TabsLayout() {
             }}
           />
           <Tabs.Screen
-            name="circles"
+            name="Circles/circles"
             options={{
               title: "Circles",
               tabBarIcon: ({ focused }) => (
@@ -128,7 +132,7 @@ export default function TabsLayout() {
             }}
           />
           <Tabs.Screen
-            name="requests"
+            name="Request/requests"
             options={{
               title: "Requests",
               tabBarIcon: ({ focused }) => (
@@ -137,7 +141,7 @@ export default function TabsLayout() {
             }}
           />
           <Tabs.Screen
-            name="profile"
+            name="Profile/profile"
             options={{
               title: "Profile",
               tabBarIcon: ({ focused }) => (

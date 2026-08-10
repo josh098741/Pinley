@@ -184,7 +184,7 @@ export default function AuthScreen({ initialMode = "choice" }) {
       if (createdSessionId && setSSOActive) {
         await setSSOActive({ session: createdSessionId });
         await syncNow();
-        router.replace("/(tabs)");
+        router.replace("/(tabs)/Home");
       } else {
         setErrorMsg("Google sign-in needs one more step. Please try again.");
         setLoading(false);
@@ -199,7 +199,7 @@ export default function AuthScreen({ initialMode = "choice" }) {
   }, [authLoaded, loading, startSSOFlow, syncNow, router]);
 
   if (isSignedIn) {
-    return <Redirect href="/(tabs)" />;
+    return <Redirect href="/(tabs)/Home" />;
   }
 
   const handleEmailSignIn = async () => {
@@ -215,7 +215,7 @@ export default function AuthScreen({ initialMode = "choice" }) {
       if (result.status === "complete") {
         await setSignInActive({ session: result.createdSessionId });
         await syncNow();
-        router.replace("/(tabs)");
+        router.replace("/(tabs)/Home");
       } else {
         setErrorMsg("Sign-in incomplete. Please try again.");
         setLoading(false);
@@ -252,7 +252,7 @@ export default function AuthScreen({ initialMode = "choice" }) {
       if (result.status === "complete") {
         await setSignUpActive({ session: result.createdSessionId });
         await syncNow();
-        router.replace("/(tabs)");
+        router.replace("/(tabs)/Home");
         return;
       }
 
@@ -282,7 +282,7 @@ export default function AuthScreen({ initialMode = "choice" }) {
       if (result.status === "complete") {
         await setSignUpActive({ session: result.createdSessionId });
         await syncNow();
-        router.replace("/(tabs)");
+        router.replace("/(tabs)/Home");
       } else {
         setErrorMsg("Verification incomplete. Please try again.");
         setLoading(false);
@@ -370,7 +370,7 @@ export default function AuthScreen({ initialMode = "choice" }) {
           >
             <Text style={s.wordmark}>Welcome</Text>
             <Text style={s.tagline}>
-              The simplest way to manage your money, bills, and savings — in one app.
+              The simplest way to manage your money, bills, and savings â€” in one app.
             </Text>
 
             <View style={s.choiceButtons}>

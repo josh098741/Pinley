@@ -11,7 +11,6 @@ function MenuItem({ icon, label, iconColor = "#fff", iconBg = "bg-slate-800", on
         </View>
         <Text className="text-[15px] font-semibold text-slate-900">{label}</Text>
       </View>
-      <Ionicons name="chevron-forward" size={20} color="#94a3b8" />
     </Pressable>
   );
 }
@@ -43,7 +42,6 @@ export default function Profile() {
               <Text className="text-[13px] font-medium text-slate-500 mt-0.5">View Profile</Text>
             </View>
           </View>
-          <Ionicons name="chevron-forward" size={20} color="#94a3b8" />
         </Pressable>
 
         {/* Menu Items */}
@@ -58,15 +56,15 @@ export default function Profile() {
           <MenuItem icon="people" label="Invite Friends" iconBg="bg-blue-600" />
           <MenuItem icon="help-circle" label="Help & Support" />
           <MenuItem icon="information-circle" label="About" />
-        </View>
 
-        {/* Log Out */}
-        <Pressable
-          onPress={() => signOut()}
-          className="mt-6 items-center py-4"
-        >
-          <Text className="text-[15px] font-bold text-red-500">Log Out</Text>
-        </Pressable>
+          {/* Log Out */}
+          <Pressable
+            onPress={() => signOut()}
+            className="mt-6 items-center py-4"
+          >
+            <Text className="text-[15px] font-bold text-red-500">Log Out</Text>
+          </Pressable>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );

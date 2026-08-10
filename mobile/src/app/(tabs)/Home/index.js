@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { Image, SafeAreaView, Text, View } from "react-native";
 import { useAuth, useUser } from "@clerk/clerk-expo";
-import { syncUserToDatabase } from "../(auth)/index.js";
+import { syncUserToDatabase } from "../../(auth)/index.js";
 
-const LOGO = require("../../../assets/images/pinley_image.png");
+const LOGO = require("../../../../assets/images/pinley_image.png");
 
 export default function Home() {
   const { user } = useUser();

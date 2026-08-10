@@ -5,7 +5,7 @@ export default function Index() {
   return (
     <>
       <SignedIn>
-        <Redirect href="/(tabs)" />
+        <Redirect href="/(tabs)/Home" />
       </SignedIn>
       <SignedOut>
         <Redirect href="/(auth)" />
