@@ -3,13 +3,14 @@ import { SignedIn, SignedOut } from "@clerk/clerk-expo";
 import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { BlurView } from "expo-blur";
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 
 const ACTIVE = "#7dd3fc";
 const INACTIVE = "#e2e8f0";
 
 function TabBarIcon({ icon, label, active }) {
-  return (
-    <View style={[styles.tabItem, active && styles.tabItemActive]}>
+  const content = (
+    <>
       <Ionicons
         name={active ? icon : `${icon}-outline`}
         size={22}
@@ -18,8 +19,23 @@ function TabBarIcon({ icon, label, active }) {
       <Text style={[styles.tabLabel, { color: active ? ACTIVE : INACTIVE }]}>
         {label}
       </Text>
-    </View>
+    </>
   );
+
+  if (active) {
+    return (
+      <LinearGradient
+        colors={["rgba(56,189,248,0.4)", "rgba(56,189,248,0.15)"]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={[styles.tabItem, styles.tabItemActive]}
+      >
+        {content}
+      </LinearGradient>
+    );
+  }
+
+  return <View style={styles.tabItem}>{content}</View>;
 }
 
 function GlassBackground() {
@@ -103,6 +119,24 @@ export default function TabsLayout() {
             }}
           />
           <Tabs.Screen
+            name="circles"
+            options={{
+              title: "Circles",
+              tabBarIcon: ({ focused }) => (
+                <TabBarIcon icon="people" label="Circles" active={focused} />
+              ),
+            }}
+          />
+          <Tabs.Screen
+            name="requests"
+            options={{
+              title: "Requests",
+              tabBarIcon: ({ focused }) => (
+                <TabBarIcon icon="mail" label="Requests" active={focused} />
+              ),
+            }}
+          />
+          <Tabs.Screen
             name="profile"
             options={{
               title: "Profile",
@@ -147,22 +181,31 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-around",
   },
   tabButton: {
+    flex: 1,
     alignItems: "center",
     justifyContent: "center",
   },
   tabItem: {
-    width: 104,
-    height: 48,
-    borderRadius: 24,
+    height: 52,
+    paddingHorizontal: 16,
+    borderRadius: 26,
     alignItems: "center",
     justifyContent: "center",
     gap: 3,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: "transparent",
   },
   tabItemActive: {
-    backgroundColor: "rgba(56,189,248,0.28)",
+    borderColor: "rgba(255,255,255,0.3)",
+    borderTopColor: "rgba(255,255,255,0.45)",
+    borderBottomColor: "rgba(255,255,255,0.12)",
+    shadowColor: "#38bdf8",
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 5,
   },
   tabLabel: {
     fontSize: 11,
