@@ -85,7 +85,7 @@ export default function SetupCheckScreen() {
     reanimated === "ok";
 
   return (
-    <SafeAreaView className="flex-1 bg-slate-900">
+    <SafeAreaView className="flex-1 bg-white">
       <ScrollView
         className="flex-1 px-6 py-8"
         contentContainerStyle={{ paddingBottom: 40 }}
@@ -97,8 +97,8 @@ export default function SetupCheckScreen() {
           >
             <Text className="text-2xl font-bold text-white">P</Text>
           </Animated.View>
-          <Text className="text-2xl font-bold text-white">Setup Check</Text>
-          <Text className="mt-1 text-sm text-slate-400">
+          <Text className="text-2xl font-bold text-slate-900">Setup Check</Text>
+          <Text className="mt-1 text-sm text-slate-500">
             Verify every integration is wired correctly
           </Text>
         </View>
