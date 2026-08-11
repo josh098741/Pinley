@@ -358,7 +358,7 @@ export default function AuthScreen({ initialMode = "choice" }) {
   if (mode === "choice") {
     return (
       <SafeAreaView style={s.root}>
-        <StatusBar barStyle="dark-content" backgroundColor={C.heroTop} />
+        <StatusBar barStyle="dark-content" backgroundColor={C.bg} />
 
         <View style={s.hero}>
           <Image source={LOGO} style={s.heroImage} />
@@ -696,7 +696,7 @@ const s = StyleSheet.create({
 
   hero: {
     height: 320,
-    backgroundColor: C.heroTop,
+    backgroundColor: C.white,
     alignItems: "center",
     justifyContent: "center",
     overflow: "hidden",
