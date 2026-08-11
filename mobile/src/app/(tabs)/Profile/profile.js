@@ -84,9 +84,7 @@ function ProfileHeader({ user, pinCode, copying, copyCode }) {
         backgroundColor: PURPLE,
         paddingTop: insets.top + 12,
         paddingHorizontal: 24,
-        paddingBottom: 24,
-        borderBottomLeftRadius: 28,
-        borderBottomRightRadius: 28,
+        paddingBottom: 36,
       }}
     >
       {/* Top row: title + help */}
@@ -182,7 +180,11 @@ export default function Profile() {
         {/* Header (with PinCode inside) scrolls away with the rest of the content */}
         <ProfileHeader user={user} pinCode={pinCode} copying={copying} copyCode={copyCode} />
 
-        <SafeAreaView edges={["bottom"]} className="flex-1 bg-white">
+        <SafeAreaView
+          edges={["bottom"]}
+          className="flex-1 rounded-t-[28px] bg-white"
+          style={{ marginTop: -32 }}
+        >
           <View className="px-6 pt-6">
             {/* Menu Items */}
             <View className="mb-10 flex-1">
