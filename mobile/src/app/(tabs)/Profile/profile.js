@@ -9,13 +9,15 @@ import {
   Image,
   ActivityIndicator,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth, useClerk, useUser } from "@clerk/clerk-expo";
 import { Ionicons } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
 import { apiRequest } from "../../../utils/api";
 import { formatPinCode } from "../../../utils/pincode";
-import { ClayCard } from "../../../components/clay";
+
+// Matches the tab bar purple (rgba(91,63,214, ...)) from Circles/circles tab layout
+const PURPLE = "#5B3FD6";
 
 function MenuItem({ icon, label, iconColor = "#fff", iconBg = "bg-slate-800", onPress, last = false }) {
   return (
@@ -31,6 +33,103 @@ function MenuItem({ icon, label, iconColor = "#fff", iconBg = "bg-slate-800", on
       </Pressable>
       {!last && <View className="h-px bg-slate-300" />}
     </>
+  );
+}
+
+function PinCodeSection({ pinCode, copying, copyCode }) {
+  return (
+    <View className="mt-5 flex-row items-center justify-between rounded-2xl bg-white/12 px-4 py-3.5">
+      <View className="flex-1">
+        <Text className="text-[11px] font-bold uppercase tracking-widest text-white/60">
+          Your PinCode
+        </Text>
+        {pinCode ? (
+          <Text
+            className="mt-1 text-[20px] font-extrabold tracking-[0.15em] text-white"
+            style={{ fontVariant: ["tabular-nums"] }}
+          >
+            {formatPinCode(pinCode)}
+          </Text>
+        ) : (
+          <View className="mt-1 flex-row items-center gap-2">
+            <ActivityIndicator size="small" color="#fff" />
+            <Text className="text-[13px] font-medium text-white/60">Loading…</Text>
+          </View>
+        )}
+      </View>
+
+      {pinCode ? (
+        <Pressable
+          onPress={copyCode}
+          className="flex-row items-center gap-1.5 rounded-full bg-white/20 px-3.5 py-2"
+        >
+          {copying ? (
+            <ActivityIndicator size="small" color="#fff" />
+          ) : (
+            <Ionicons name="copy-outline" size={13} color="#fff" />
+          )}
+          <Text className="text-[12px] font-bold text-white">Copy</Text>
+        </Pressable>
+      ) : null}
+    </View>
+  );
+}
+
+function ProfileHeader({ user, pinCode, copying, copyCode }) {
+  const insets = useSafeAreaInsets();
+
+  return (
+    <View
+      style={{
+        backgroundColor: PURPLE,
+        paddingTop: insets.top + 12,
+        paddingHorizontal: 24,
+        paddingBottom: 24,
+        borderBottomLeftRadius: 28,
+        borderBottomRightRadius: 28,
+      }}
+    >
+      {/* Top row: title + help */}
+      <View className="mb-6 flex-row items-center justify-between">
+        <Text className="text-[22px] font-bold text-white tracking-tight">Profile</Text>
+        <Pressable className="flex-row items-center gap-1.5 rounded-full bg-white/15 px-3.5 py-2">
+          <Ionicons name="help-circle-outline" size={16} color="#fff" />
+          <Text className="text-[13px] font-bold text-white">Help</Text>
+        </Pressable>
+      </View>
+
+      {/* Avatar + name row */}
+      <View className="flex-row items-center justify-between">
+        <View className="flex-row items-center gap-4">
+          <View>
+            {user?.imageUrl ? (
+              <Image source={{ uri: user.imageUrl }} className="h-14 w-14 rounded-full" />
+            ) : (
+              <View className="h-14 w-14 items-center justify-center rounded-full bg-white/25">
+                <Text className="text-[20px] font-bold text-white">
+                  {(user?.fullName || "U").charAt(0).toUpperCase()}
+                </Text>
+              </View>
+            )}
+            <View
+              className="absolute -bottom-1 -right-1 items-center justify-center rounded-full bg-white"
+              style={{ width: 22, height: 22 }}
+            >
+              <Ionicons name="camera" size={12} color={PURPLE} />
+            </View>
+          </View>
+          <View>
+            <Text className="text-[18px] font-bold text-white">{user?.fullName || "User"}</Text>
+            <Text className="mt-0.5 text-[13px] font-medium text-white/70">
+              {user?.emailAddresses?.[0]?.emailAddress || ""}
+            </Text>
+          </View>
+        </View>
+      </View>
+
+      {/* PinCode now lives inside the header, right below user details */}
+      <PinCodeSection pinCode={pinCode} copying={copying} copyCode={copyCode} />
+    </View>
   );
 }
 
@@ -72,101 +171,40 @@ export default function Profile() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
-      <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
+    <View className="flex-1 bg-white">
+      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+
       <ScrollView
-        className="flex-1 px-6"
+        className="flex-1"
         contentContainerStyle={{ paddingBottom: 100 }}
+        showsVerticalScrollIndicator={false}
       >
-        <Text className="mb-8 text-[28px] font-bold text-slate-900 tracking-tight">Profile</Text>
+        {/* Header (with PinCode inside) scrolls away with the rest of the content */}
+        <ProfileHeader user={user} pinCode={pinCode} copying={copying} copyCode={copyCode} />
 
-        {/* Profile Card */}
-        <Pressable className="mb-6 flex-row items-center justify-between">
-          <View className="flex-row items-center gap-4">
-            {user?.imageUrl ? (
-              <Image source={{ uri: user.imageUrl }} className="h-14 w-14 rounded-full" />
-            ) : (
-              <View className="h-14 w-14 items-center justify-center rounded-full bg-slate-200">
-                <Ionicons name="person" size={24} color="#64748b" />
-              </View>
-            )}
-            <View>
-              <Text className="text-lg font-bold text-slate-900">{user?.fullName || "User"}</Text>
-              <Text className="text-[13px] font-medium text-slate-500 mt-0.5">{user?.emailAddresses?.[0]?.emailAddress || ""}</Text>
-            </View>
-          </View>
-        </Pressable>
+        <SafeAreaView edges={["bottom"]} className="flex-1 bg-white">
+          <View className="px-6 pt-6">
+            {/* Menu Items */}
+            <View className="mb-10 flex-1">
+              <MenuItem icon="person" label="Account Settings" />
+              <MenuItem icon="shield-checkmark" label="Privacy & Safety" />
+              <MenuItem icon="notifications" label="Notifications" />
+              <MenuItem icon="battery-half" label="Battery Optimization" iconBg="bg-emerald-700" />
+              <MenuItem icon="pie-chart" label="Data Usage" />
+              <MenuItem icon="color-palette" label="Appearance" />
+              <MenuItem icon="globe-outline" label="Language" />
+              <MenuItem icon="people" label="Invite Friends" iconBg="bg-blue-600" />
+              <MenuItem icon="help-circle" label="Help & Support" />
+              <MenuItem icon="information-circle" label="About" last />
 
-        {/* PinCode Card */}
-        <ClayCard style={{ marginBottom: 20, backgroundColor: "#F5F2FE", shadowOpacity: 0.18 }}>
-          <View className="flex-row items-center justify-between mb-3">
-            <View className="flex-row items-center gap-2">
-              <View className="h-7 w-7 items-center justify-center rounded-full bg-violet-200">
-                <Ionicons name="key" size={14} color="#5B21B6" />
-              </View>
-              <Text className="text-[13px] font-bold uppercase tracking-wide text-violet-900">
-                Your PinCode
-              </Text>
-            </View>
-            {pinCode ? (
-              <Pressable
-                onPress={copyCode}
-                className="flex-row items-center gap-1 rounded-full bg-white px-3 py-1.5 border border-violet-200"
-              >
-                {copying ? (
-                  <ActivityIndicator size="small" color="#7C3AED" />
-                ) : (
-                  <Ionicons name="copy-outline" size={13} color="#5B21B6" />
-                )}
-                <Text className="text-[12px] font-bold text-violet-900">Copy</Text>
+              {/* Log Out */}
+              <Pressable onPress={() => signOut()} className="mt-0 items-center py-4">
+                <Text className="text-[15px] font-bold text-red-500">Log Out</Text>
               </Pressable>
-            ) : null}
-          </View>
-
-          {pinCode ? (
-            <>
-              <View className="items-center py-2">
-                <Text
-                  className="text-[34px] font-extrabold tracking-[0.25em] text-violet-950"
-                  style={{ fontVariant: ["tabular-nums"] }}
-                >
-                  {formatPinCode(pinCode)}
-                </Text>
-              </View>
-              <Text className="text-center text-[12.5px] leading-5 text-violet-700/80 px-4">
-                Share this code with family and friends so they can find you and send you a request.
-              </Text>
-            </>
-          ) : (
-            <View className="items-center py-4">
-              <ActivityIndicator color="#7C3AED" />
-              <Text className="mt-2 text-[13px] font-medium text-violet-700/80">Loading your code…</Text>
             </View>
-          )}
-        </ClayCard>
-
-        {/* Menu Items */}
-        <View className="mb-10 flex-1">
-          <MenuItem icon="person" label="Account Settings" />
-          <MenuItem icon="shield-checkmark" label="Privacy & Safety" />
-          <MenuItem icon="notifications" label="Notifications" />
-          <MenuItem icon="battery-half" label="Battery Optimization" iconBg="bg-emerald-700" />
-          <MenuItem icon="pie-chart" label="Data Usage" />
-          <MenuItem icon="color-palette" label="Appearance" />
-          <MenuItem icon="globe-outline" label="Language" />
-          <MenuItem icon="people" label="Invite Friends" iconBg="bg-blue-600" />
-          <MenuItem icon="help-circle" label="Help & Support" />
-          <MenuItem icon="information-circle" label="About" last />
-
-          {/* Log Out */}
-          <Pressable
-            onPress={() => signOut()}
-            className="mt-0 items-center py-4"
-          >
-            <Text className="text-[15px] font-bold text-red-500">Log Out</Text>
-          </Pressable>
-        </View>
+          </View>
+        </SafeAreaView>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
