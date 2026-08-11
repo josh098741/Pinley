@@ -5,8 +5,8 @@ import { BlurView } from "expo-blur";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 
-const ACTIVE = "#7dd3fc";
-const INACTIVE = "#e2e8f0";
+const ACTIVE = "#ffffff";
+const INACTIVE = "#d8cffb";
 
 function TabBarIcon({ icon, label, active }) {
   const content = (
@@ -25,7 +25,7 @@ function TabBarIcon({ icon, label, active }) {
   if (active) {
     return (
       <LinearGradient
-        colors={["rgba(56,189,248,0.4)", "rgba(56,189,248,0.15)"]}
+        colors={["rgba(196,181,253,0.9)", "rgba(124,58,237,0.55)"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={[styles.tabItem, styles.tabItemActive]}
@@ -176,10 +176,10 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255,255,255,0.15)",
     borderTopColor: "rgba(255,255,255,0.3)",
     borderBottomColor: "rgba(255,255,255,0.05)",
-    backgroundColor: "rgba(15,23,42,0.4)",
+    backgroundColor: "rgba(91,63,214,0.75)",
   },
   tabBarBgAndroid: {
-    backgroundColor: "rgba(15,23,42,0.75)",
+    backgroundColor: "rgba(91,63,214,0.97)",
   },
   tabRow: {
     flex: 1,
@@ -202,18 +202,19 @@ const styles = StyleSheet.create({
     borderColor: "transparent",
   },
   tabItemActive: {
-    borderColor: "rgba(255,255,255,0.3)",
-    borderTopColor: "rgba(255,255,255,0.45)",
-    borderBottomColor: "rgba(255,255,255,0.12)",
-    shadowColor: "#38bdf8",
-    shadowOpacity: 0.35,
-    shadowRadius: 10,
+    borderWidth: 1.5,
+    borderColor: "rgba(255,255,255,0.55)",
+    borderTopColor: "rgba(255,255,255,0.7)",
+    borderBottomColor: "rgba(255,255,255,0.25)",
+    shadowColor: "#c4b5fd",
+    shadowOpacity: 0.7,
+    shadowRadius: 14,
     shadowOffset: { width: 0, height: 4 },
-    elevation: 5,
+    elevation: 10,
   },
   tabLabel: {
     fontSize: 11,
     fontWeight: "700",
     lineHeight: 13,
   },
-});
+}); 
