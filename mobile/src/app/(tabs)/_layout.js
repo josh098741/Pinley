@@ -4,12 +4,20 @@ import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { BlurView } from "expo-blur";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import { useEffect, useState } from "react";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+} from "react-native-reanimated";
 
 const ACTIVE = "#ffffff";
 const INACTIVE = "#d8cffb";
 
+const AnimatedLinearGradient = Animated.createAnimatedComponent(LinearGradient);
+
 function TabBarIcon({ icon, label, active }) {
-  const content = (
+  return (
     <>
       <Ionicons
         name={active ? icon : `${icon}-outline`}
@@ -21,21 +29,6 @@ function TabBarIcon({ icon, label, active }) {
       </Text>
     </>
   );
-
-  if (active) {
-    return (
-      <LinearGradient
-        colors={["rgba(196,181,253,0.9)", "rgba(124,58,237,0.55)"]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={[styles.tabItem, styles.tabItemActive]}
-      >
-        {content}
-      </LinearGradient>
-    );
-  }
-
-  return <View style={styles.tabItem}>{content}</View>;
 }
 
 function GlassBackground() {
@@ -52,11 +45,46 @@ function GlassBackground() {
 }
 
 function CustomTabBar({ state, descriptors, navigation }) {
+  const [rowWidth, setRowWidth] = useState(0);
+  const tabCount = state.routes.length;
+  const tabWidth = rowWidth / tabCount;
+
+  const translateX = useSharedValue(0);
+
+  useEffect(() => {
+    if (rowWidth > 0) {
+      translateX.value = withSpring(state.index * tabWidth, {
+        damping: 18,
+        stiffness: 180,
+        mass: 0.6,
+      });
+    }
+  }, [state.index, rowWidth]);
+
+  const indicatorStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: translateX.value }],
+  }));
+
   return (
     <View style={styles.tabBarWrapper}>
       <View style={styles.tabBarPill}>
         <GlassBackground />
-        <View style={styles.tabRow}>
+        <View
+          style={styles.tabRow}
+          onLayout={(e) => setRowWidth(e.nativeEvent.layout.width)}
+        >
+          {rowWidth > 0 && (
+            <AnimatedLinearGradient
+              colors={["rgba(196,181,253,0.9)", "rgba(124,58,237,0.55)"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={[
+                styles.tabIndicator,
+                { width: tabWidth },
+                indicatorStyle,
+              ]}
+            />
+          )}
           {state.routes.map((route, index) => {
             const { options } = descriptors[route.key];
             const isFocused = state.index === index;
@@ -79,11 +107,13 @@ function CustomTabBar({ state, descriptors, navigation }) {
                 accessibilityLabel={options.tabBarAccessibilityLabel}
                 accessibilityState={isFocused ? { selected: true } : {}}
               >
-                {options.tabBarIcon({
-                  focused: isFocused,
-                  color: isFocused ? ACTIVE : INACTIVE,
-                  size: 22,
-                })}
+                <View style={styles.tabButtonContent}>
+                  {options.tabBarIcon({
+                    focused: isFocused,
+                    color: isFocused ? ACTIVE : INACTIVE,
+                    size: 22,
+                  })}
+                </View>
               </Pressable>
             );
           })}
@@ -186,22 +216,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
   },
-  tabButton: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  tabItem: {
-    height: 52,
-    paddingHorizontal: 16,
+  tabIndicator: {
+    position: "absolute",
+    left: 0,
+    top: 8,
+    bottom: 8,
     borderRadius: 26,
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 3,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: "transparent",
-  },
-  tabItemActive: {
     borderWidth: 1.5,
     borderColor: "rgba(255,255,255,0.55)",
     borderTopColor: "rgba(255,255,255,0.7)",
@@ -212,9 +232,21 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     elevation: 10,
   },
+  tabButton: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  tabButtonContent: {
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 3,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
   tabLabel: {
     fontSize: 11,
     fontWeight: "700",
     lineHeight: 13,
   },
-}); 
+});
