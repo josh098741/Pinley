@@ -1,6 +1,6 @@
-const buckets = new Map()
-
 export const rateLimit = ({ windowMs = 60_000, max = 30, message } = {}) => {
+  const buckets = new Map()
+
   return (req, res, next) => {
     const key = String(req.auth?.sub || req.auth?.userId || req.ip || "anon")
     const now = Date.now()

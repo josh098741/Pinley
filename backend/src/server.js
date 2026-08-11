@@ -8,6 +8,7 @@ import { connectDB } from "./database/db.js"
 import authRouter from "./routers/auth.route.js"
 import userRouter from "./routers/user.route.js"
 import requestRouter from "./routers/request.route.js"
+import connectionRouter from "./routers/connection.route.js"
 import { authSocket, initRealtime, registerRealtimeEvents } from "./utils/realtime.js"
 
 const app = express()
@@ -28,6 +29,7 @@ app.use(async (req, res, next) => {
 app.use(authRouter)
 app.use(userRouter)
 app.use(requestRouter)
+app.use(connectionRouter)
 
 app.get("/health", (req, res) => {
   res.send({ message: "server is healthy" })

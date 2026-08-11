@@ -23,6 +23,8 @@ export function RequestsProvider({ children }) {
   const [outgoing, setOutgoing] = useState([]);
   const [recent, setRecent] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [connections, setConnections] = useState([]);
+  const [connectionsLoading, setConnectionsLoading] = useState(true);
   const [connected, setConnected] = useState(false);
   const socketRef = useRef(null);
 
@@ -41,17 +43,32 @@ export function RequestsProvider({ children }) {
     }
   }, []);
 
+  const refreshConnections = useCallback(async () => {
+    const token = await getTokenRef.current();
+    if (!token) return;
+    try {
+      const data = await apiRequest("/api/connections", { token });
+      setConnections(data.connections || []);
+    } catch (err) {
+      console.error("Failed to load connections:", err);
+    } finally {
+      setConnectionsLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     if (!isSignedIn) return;
     let cancelled = false;
     setLoading(true);
+    setConnectionsLoading(true);
     (async () => {
-      if (!cancelled) await refresh();
+      if (cancelled) return;
+      await Promise.all([refresh(), refreshConnections()]);
     })();
     return () => {
       cancelled = true;
     };
-  }, [isSignedIn, refresh]);
+  }, [isSignedIn, refresh, refreshConnections]);
 
   useEffect(() => {
     if (!isSignedIn) return;
@@ -94,7 +111,10 @@ export function RequestsProvider({ children }) {
 
       if (!socket || cancelled) return;
 
-      const handleEvent = () => refresh();
+      const handleEvent = () => {
+        refresh();
+        refreshConnections();
+      };
       socket.on("request:new", handleEvent);
       socket.on("request:accepted", handleEvent);
       socket.on("request:declined", handleEvent);
@@ -110,7 +130,7 @@ export function RequestsProvider({ children }) {
       if (socket) socket.disconnect();
       socketRef.current = null;
     };
-  }, [isSignedIn, refresh]);
+  }, [isSignedIn, refresh, refreshConnections]);
 
   const sendRequest = useCallback(
     async ({ recipientId, pinCode }) => {
@@ -137,8 +157,9 @@ export function RequestsProvider({ children }) {
         body: { action },
       });
       await refresh();
+      if (action === "accept") await refreshConnections();
     },
-    [refresh]
+    [refresh, refreshConnections]
   );
 
   const cancelRequest = useCallback(
@@ -160,13 +181,29 @@ export function RequestsProvider({ children }) {
       outgoing,
       recent,
       loading,
+      connections,
+      connectionsLoading,
       connected,
       refresh,
+      refreshConnections,
       sendRequest,
       respond,
       cancelRequest,
     }),
-    [incoming, outgoing, recent, loading, connected, refresh, sendRequest, respond, cancelRequest]
+    [
+      incoming,
+      outgoing,
+      recent,
+      loading,
+      connections,
+      connectionsLoading,
+      connected,
+      refresh,
+      refreshConnections,
+      sendRequest,
+      respond,
+      cancelRequest,
+    ]
   );
 
   return <RequestsContext.Provider value={value}>{children}</RequestsContext.Provider>;

@@ -33,6 +33,15 @@ const normalize = (input) =>
     .replace(/[^A-Z0-9]/g, "")
     .slice(0, CODE_LENGTH);
 
+const ACTION_TIMEOUT_MS = 12000;
+const withTimeout = (promise, ms = ACTION_TIMEOUT_MS) =>
+  Promise.race([
+    promise,
+    new Promise((_, reject) =>
+      setTimeout(() => reject(new Error("Request timed out. Please try again.")), ms)
+    ),
+  ]);
+
 // Small radar-ring badge used across the empty / loading states.
 // Echoes the "search nearby" feel of a location app without being literal.
 function RadarBadge({ icon, tone = clay.primary }) {
@@ -109,7 +118,6 @@ export default function RequestSearch() {
 
     setSearching(true);
     setHint("");
-    setError("");
     try {
       const token = await getTokenRef.current();
       if (!token || seq !== searchSeq.current) return;
@@ -143,6 +151,7 @@ export default function RequestSearch() {
       return;
     }
     if (timerRef.current) clearTimeout(timerRef.current);
+    setError("");
     timerRef.current = setTimeout(() => runSearch(query), 300);
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
@@ -152,39 +161,54 @@ export default function RequestSearch() {
   const handleSend = async (userId) => {
     setBusyId(userId);
     setError("");
+    let ok = false;
     try {
-      await sendRequest({ recipientId: userId });
+      const sent = await withTimeout(sendRequest({ recipientId: userId }));
+      ok = true;
+      if (sent) {
+        setResults((prev) =>
+          prev.map((u) =>
+            u._id === userId
+              ? { ...u, relationship: "pending_outgoing", requestId: sent._id }
+              : u
+          )
+        );
+      }
     } catch (err) {
       setError(err.message || "Could not send request.");
     } finally {
       setBusyId(null);
-      await runSearch(query);
+      if (ok) await runSearch(query).catch(() => {});
     }
   };
 
   const handleAccept = async (requestId) => {
     setBusyId(requestId);
     setError("");
+    let ok = false;
     try {
-      await respond(requestId, "accept");
+      await withTimeout(respond(requestId, "accept"));
+      ok = true;
     } catch (err) {
       setError(err.message || "Could not accept request.");
     } finally {
       setBusyId(null);
-      await runSearch(query);
+      if (ok) await runSearch(query).catch(() => {});
     }
   };
 
   const handleCancel = async (requestId) => {
     setBusyId(requestId);
     setError("");
+    let ok = false;
     try {
-      await cancelRequest(requestId);
+      await withTimeout(cancelRequest(requestId));
+      ok = true;
     } catch (err) {
       setError(err.message || "Could not cancel request.");
     } finally {
       setBusyId(null);
-      await runSearch(query);
+      if (ok) await runSearch(query).catch(() => {});
     }
   };
 
@@ -198,6 +222,7 @@ export default function RequestSearch() {
             label="Add"
             icon="add"
             onPress={() => handleSend(user._id)}
+            loading={busy}
             disabled={busy}
           />
         );
@@ -290,6 +315,7 @@ export default function RequestSearch() {
             onBlur={() => setFocused(false)}
             onSubmitEditing={() => {
               if (timerRef.current) clearTimeout(timerRef.current);
+              setError("");
               Keyboard.dismiss();
               runSearch(query);
             }}
