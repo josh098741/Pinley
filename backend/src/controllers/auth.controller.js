@@ -2,31 +2,34 @@ import { Webhook } from "svix"
 import { env } from "../utils/env.js"
 import { clerkClient } from "../utils/clerk.js"
 import User from "../models/user.models.js"
+import { generatePinCode } from "../utils/pincode.js"
+import { upsertUserByClerkId } from "../utils/userSync.js"
 
 const webhook = env.CLERK_WEBHOOK_SECRET ? new Webhook(env.CLERK_WEBHOOK_SECRET) : null
 
-const upsertUser = async (data) => {
+const buildPayload = (data) => {
   const primaryEmail =
     data.email_addresses?.find((e) => e.id === data.primary_email_address_id)?.email_address ??
+    data.emailAddresses?.find((e) => e.id === data.primaryEmailAddressId)?.emailAddress ??
     data.email_addresses?.[0]?.email_address ??
+    data.emailAddresses?.[0]?.emailAddress ??
+    (typeof data.email === "string" ? data.email : "") ??
     `${data.id}@noemail.clerk`
 
-  const payload = {
+  return {
     clerkUserId: data.id,
     email: primaryEmail,
-    firstName: data.first_name || "",
-    lastName: data.last_name || "",
+    firstName: data.first_name || data.firstName || "",
+    lastName: data.last_name || data.lastName || "",
     username: data.username || "",
-    imageUrl: data.image_url || "",
-    emailAddresses: (data.email_addresses || []).map((e) => e.email_address),
+    imageUrl: data.image_url || data.imageUrl || "",
+    emailAddresses: Array.isArray(data.email_addresses)
+      ? data.email_addresses.map((e) => e.email_address)
+      : data.emailAddresses || [],
   }
-
-  return User.findOneAndUpdate({ clerkUserId: data.id }, payload, {
-    returnDocument: "after",
-    upsert: true,
-    setDefaultsOnInsert: true,
-  })
 }
+
+const upsertUser = async (data) => upsertUserByClerkId(data.id, buildPayload(data))
 
 export const syncUser = async (req, res) => {
   try {
@@ -37,26 +40,7 @@ export const syncUser = async (req, res) => {
 
     const clerkUser = await clerkClient.users.getUser(userId)
 
-    const primaryEmail =
-      clerkUser.emailAddresses?.find((e) => e.id === clerkUser.primaryEmailAddressId)?.emailAddress ??
-      clerkUser.emailAddresses?.[0]?.emailAddress ??
-      `${clerkUser.id}@noemail.clerk`
-
-    const payload = {
-      clerkUserId: clerkUser.id,
-      email: primaryEmail,
-      firstName: clerkUser.firstName || "",
-      lastName: clerkUser.lastName || "",
-      username: clerkUser.username || "",
-      imageUrl: clerkUser.imageUrl || "",
-      emailAddresses: clerkUser.emailAddresses?.map((e) => e.emailAddress) || [],
-    }
-
-    const user = await User.findOneAndUpdate({ clerkUserId: clerkUser.id }, payload, {
-      returnDocument: "after",
-      upsert: true,
-      setDefaultsOnInsert: true,
-    })
+    const user = await upsertUserByClerkId(clerkUser.id, buildPayload(clerkUser))
 
     return res.status(200).json({ user })
   } catch (error) {
@@ -132,27 +116,10 @@ export const getCurrentUser = async (req, res) => {
 
     if (!user) {
       const clerkUser = await clerkClient.users.getUser(userId)
-
-      const primaryEmail =
-        clerkUser.emailAddresses?.find((e) => e.id === clerkUser.primaryEmailAddressId)?.emailAddress ??
-        clerkUser.emailAddresses?.[0]?.emailAddress ??
-        `${clerkUser.id}@noemail.clerk`
-
-      const payload = {
-        clerkUserId: clerkUser.id,
-        email: primaryEmail,
-        firstName: clerkUser.firstName || "",
-        lastName: clerkUser.lastName || "",
-        username: clerkUser.username || "",
-        imageUrl: clerkUser.imageUrl || "",
-        emailAddresses: clerkUser.emailAddresses?.map((e) => e.emailAddress) || [],
-      }
-
-      user = await User.findOneAndUpdate({ clerkUserId: clerkUser.id }, payload, {
-        returnDocument: "after",
-        upsert: true,
-        setDefaultsOnInsert: true,
-      })
+      user = await upsertUserByClerkId(clerkUser.id, buildPayload(clerkUser))
+    } else if (!user.pinCode) {
+      user.pinCode = generatePinCode()
+      await user.save()
     }
 
     return res.status(200).json({ user })

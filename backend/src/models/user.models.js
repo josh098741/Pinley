@@ -1,4 +1,5 @@
 import mongoose from "mongoose"
+import { generatePinCode } from "../utils/pincode.js"
 
 const userSchema = new mongoose.Schema(
   {
@@ -7,6 +8,13 @@ const userSchema = new mongoose.Schema(
       required: true,
       unique: true,
       index: true,
+    },
+    pinCode: {
+      type: String,
+      unique: true,
+      index: true,
+      uppercase: true,
+      default: () => generatePinCode(),
     },
     email: {
       type: String,

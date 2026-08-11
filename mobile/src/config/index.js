@@ -26,3 +26,7 @@ export const API_URL_CANDIDATES = [
 ].filter(Boolean);
 
 export const API_URL = API_URL_CANDIDATES[0];
+
+export const SOCKET_URL_CANDIDATES = API_URL_CANDIDATES.map((url) =>
+  url.replace(/^http/, "ws")
+);

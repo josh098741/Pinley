@@ -1,0 +1,177 @@
+import User from "../models/user.models.js"
+import Request from "../models/request.models.js"
+import Connection from "../models/connection.models.js"
+import { emitToUser } from "../utils/realtime.js"
+import { normalizePinCode } from "../utils/pincode.js"
+
+const USER_SELECT = "firstName lastName email username imageUrl pinCode"
+
+const getCurrentUser = async (req) => {
+  const clerkUserId = req.auth?.sub || req.auth?.userId
+  return User.findOne({ clerkUserId })
+}
+
+const findConnection = async (a, b) => {
+  const [u1, u2] = [String(a), String(b)].sort()
+  return Connection.findOne({ userA: u1, userB: u2 })
+}
+
+const createConnection = async (a, b) => {
+  const [u1, u2] = [String(a), String(b)].sort()
+  return Connection.create({ userA: u1, userB: u2 })
+}
+
+const displayName = (user) =>
+  [user.firstName, user.lastName].filter(Boolean).join(" ").trim() || user.email || "this user"
+
+export const getRequests = async (req, res) => {
+  try {
+    const me = await getCurrentUser(req)
+    if (!me) return res.status(404).json({ message: "User not found" })
+
+    const recentList = await Request.find({
+      $or: [{ sender: me._id }, { recipient: me._id }],
+      status: { $in: ["accepted", "declined", "cancelled"] },
+    })
+      .populate("sender", USER_SELECT)
+      .populate("recipient", USER_SELECT)
+      .sort({ updatedAt: -1 })
+      .limit(20)
+
+    const recent = recentList.map((request) => ({
+      ...request.toObject(),
+      incoming: String(request.recipient._id || request.recipient) === String(me._id),
+    }))
+
+    return res.status(200).json({ incoming, outgoing, recent })
+  } catch (error) {
+    console.error("Error fetching requests:", error)
+    return res.status(500).json({ message: "Internal server error" })
+  }
+}
+
+export const sendRequest = async (req, res) => {
+  try {
+    const me = await getCurrentUser(req)
+    if (!me) return res.status(404).json({ message: "User not found" })
+
+    const { recipientId, pinCode } = req.body || {}
+
+    let recipient
+    if (recipientId) {
+      recipient = await User.findById(recipientId)
+    } else if (pinCode) {
+      recipient = await User.findOne({ pinCode: normalizePinCode(pinCode) })
+    }
+
+    if (!recipient) {
+      return res.status(404).json({ message: "No user found with that PinCode." })
+    }
+    if (String(recipient._id) === String(me._id)) {
+      return res.status(400).json({ message: "You cannot send a request to yourself." })
+    }
+
+    const connected = await findConnection(me._id, recipient._id)
+    if (connected) {
+      return res.status(409).json({ message: `You are already connected with ${displayName(recipient)}.` })
+    }
+
+    const existing = await Request.findOne({
+      status: "pending",
+      $or: [
+        { sender: me._id, recipient: recipient._id },
+        { sender: recipient._id, recipient: me._id },
+      ],
+    })
+
+    if (existing) {
+      if (String(existing.sender) === String(me._id)) {
+        return res.status(409).json({ message: "Request already sent — waiting for a reply." })
+      }
+      return res.status(409).json({ message: `${displayName(recipient)} already sent you a request.` })
+    }
+
+    const created = await Request.create({ sender: me._id, recipient: recipient._id })
+    const request = await Request.findById(created._id)
+      .populate("sender", USER_SELECT)
+      .populate("recipient", USER_SELECT)
+
+    emitToUser(recipient._id, "request:new", request)
+
+    return res.status(201).json({ request })
+  } catch (error) {
+    console.error("Error sending request:", error)
+    return res.status(500).json({ message: "Internal server error" })
+  }
+}
+
+export const respondToRequest = async (req, res) => {
+  try {
+    const me = await getCurrentUser(req)
+    if (!me) return res.status(404).json({ message: "User not found" })
+
+    const { action } = req.body || {}
+    if (!["accept", "decline"].includes(action)) {
+      return res.status(400).json({ message: "Action must be 'accept' or 'decline'." })
+    }
+
+    const request = await Request.findById(req.params.id)
+    if (!request) return res.status(404).json({ message: "Request not found." })
+    if (String(request.recipient) !== String(me._id)) {
+      return res.status(403).json({ message: "You cannot respond to this request." })
+    }
+    if (request.status !== "pending") {
+      return res.status(409).json({ message: "This request has already been handled." })
+    }
+
+    request.status = action === "accept" ? "accepted" : "declined"
+    request.respondedAt = new Date()
+    await request.save()
+
+    if (action === "accept") {
+      await createConnection(me._id, request.sender)
+    }
+
+    const populated = await Request.findById(request._id)
+      .populate("sender", USER_SELECT)
+      .populate("recipient", USER_SELECT)
+
+    emitToUser(request.sender, action === "accept" ? "request:accepted" : "request:declined", populated)
+
+    return res.status(200).json({ request: populated })
+  } catch (error) {
+    console.error("Error responding to request:", error)
+    return res.status(500).json({ message: "Internal server error" })
+  }
+}
+
+export const cancelRequest = async (req, res) => {
+  try {
+    const me = await getCurrentUser(req)
+    if (!me) return res.status(404).json({ message: "User not found" })
+
+    const request = await Request.findById(req.params.id)
+    if (!request) return res.status(404).json({ message: "Request not found." })
+    if (String(request.sender) !== String(me._id)) {
+      return res.status(403).json({ message: "You cannot cancel this request." })
+    }
+    if (request.status !== "pending") {
+      return res.status(409).json({ message: "This request has already been handled." })
+    }
+
+    request.status = "cancelled"
+    request.respondedAt = new Date()
+    await request.save()
+
+    const populated = await Request.findById(request._id)
+      .populate("sender", USER_SELECT)
+      .populate("recipient", USER_SELECT)
+
+    emitToUser(request.recipient, "request:cancelled", populated)
+
+    return res.status(200).json({ request: populated })
+  } catch (error) {
+    console.error("Error cancelling request:", error)
+    return res.status(500).json({ message: "Internal server error" })
+  }
+}

@@ -1,9 +1,14 @@
 import express from "express"
 import cors from "cors"
+import http from "http"
+import { Server } from "socket.io"
 import { env } from "./utils/env.js"
 
 import { connectDB } from "./database/db.js"
 import authRouter from "./routers/auth.route.js"
+import userRouter from "./routers/user.route.js"
+import requestRouter from "./routers/request.route.js"
+import { authSocket, initRealtime, registerRealtimeEvents } from "./utils/realtime.js"
 
 const app = express()
 
@@ -21,15 +26,25 @@ app.use(async (req, res, next) => {
 })
 
 app.use(authRouter)
+app.use(userRouter)
+app.use(requestRouter)
 
 app.get("/health", (req, res) => {
   res.send({ message: "server is healthy" })
 })
 
+const server = http.createServer(app)
+const io = new Server(server, {
+  cors: { origin: "*" },
+})
+initRealtime(io)
+io.use(authSocket)
+registerRealtimeEvents()
+
 const start = async () => {
   try {
     await connectDB()
-    app.listen(env.PORT, () => {
+    server.listen(env.PORT, () => {
       console.log(`Server is running on port ${env.PORT}`)
     })
   } catch (error) {
