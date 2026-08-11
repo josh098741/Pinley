@@ -2,70 +2,105 @@ import User from "../models/user.models.js"
 import Connection from "../models/connection.models.js"
 import Request from "../models/request.models.js"
 
-const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+const CODE_LENGTH = 8
+const MAX_CODE_LENGTH = 50
 
-const relationshipFor = async (meId, otherId) => {
-  if (String(meId) === String(otherId)) return { relationship: "self", requestId: null }
-
-  const [a, b] = [String(meId), String(otherId)].sort()
-  const connection = await Connection.findOne({ userA: a, userB: b })
-  if (connection) return { relationship: "connected", requestId: null }
-
-  const pending = await Request.findOne({
-    status: "pending",
-    $or: [
-      { sender: meId, recipient: otherId },
-      { sender: otherId, recipient: meId },
-    ],
-  })
-  if (!pending) return { relationship: "none", requestId: null }
-
-  const outgoing = String(pending.sender) === String(meId)
-  return {
-    relationship: outgoing ? "pending_outgoing" : "pending_incoming",
-    requestId: pending._id,
-  }
-}
+const normalizeCode = (input = "") =>
+  input
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, "")
+    .slice(0, CODE_LENGTH)
 
 export const searchUsers = async (req, res) => {
   try {
-    const raw = (req.query.q || "").trim()
-    const clerkUserId = req.auth?.sub || req.auth?.userId
+    const raw = (req.query.code || req.query.q || "").trim().slice(0, MAX_CODE_LENGTH)
+    const normalized = normalizeCode(raw)
 
+    // Strict gate: the database is never touched unless the PinCode is complete.
+    if (normalized.length !== CODE_LENGTH) {
+      return res
+        .status(200)
+        .json({ users: [], hint: "PinCodes are exactly 8 characters (e.g. AB12-CD34)." })
+    }
+
+    const clerkUserId = req.auth?.sub || req.auth?.userId
     const me = await User.findOne({ clerkUserId })
     if (!me) return res.status(404).json({ message: "User not found" })
 
-    if (!raw) return res.status(200).json({ users: [] })
-
-    const conditions = [
-      { email: { $regex: escapeRegex(raw), $options: "i" } },
-      { firstName: { $regex: escapeRegex(raw), $options: "i" } },
-      { lastName: { $regex: escapeRegex(raw), $options: "i" } },
-      { username: { $regex: escapeRegex(raw), $options: "i" } },
-    ]
-
-    const normalizedCode = raw.toUpperCase().replace(/[^A-Z0-9]/g, "")
-    if (normalizedCode.length > 0) {
-      conditions.push({ pinCode: { $regex: escapeRegex(normalizedCode), $options: "i" } })
+    const users = await User.find({ pinCode: normalized }).limit(1)
+    if (users.length === 0) {
+      return res.status(200).json({
+        users: [],
+        hint: "No user has that PinCode. Double-check it and try again.",
+      })
     }
 
-    const users = await User.find({ $or: conditions, _id: { $ne: me._id } }).limit(20)
+    const meIdStr = String(me._id)
+    const ids = users.map((u) => u._id)
 
-    const results = []
-    for (const user of users) {
-      const { relationship, requestId } = await relationshipFor(me._id, user._id)
-      results.push({
+    const [connections, pending] = await Promise.all([
+      Connection.find({
+        $or: [
+          { userA: me._id, userB: { $in: ids } },
+          { userA: { $in: ids }, userB: me._id },
+        ],
+      }),
+      Request.find({
+        status: "pending",
+        $or: [
+          { sender: me._id, recipient: { $in: ids } },
+          { sender: { $in: ids }, recipient: me._id },
+        ],
+      }),
+    ])
+
+    const connected = new Set()
+    for (const conn of connections) {
+      const a = String(conn.userA)
+      connected.add(a === meIdStr ? String(conn.userB) : a)
+    }
+
+    const pendingMap = new Map()
+    for (const reqDoc of pending) {
+      const sender = String(reqDoc.sender)
+      const other = sender === meIdStr ? String(reqDoc.recipient) : sender
+      if (!pendingMap.has(other)) {
+        pendingMap.set(other, {
+          outgoing: sender === meIdStr,
+          requestId: String(reqDoc._id),
+        })
+      }
+    }
+
+    const results = users.map((user) => {
+      const idStr = String(user._id)
+      const isSelf = idStr === meIdStr
+
+      const base = {
         _id: user._id,
         firstName: user.firstName,
         lastName: user.lastName,
         email: user.email,
         username: user.username,
         imageUrl: user.imageUrl,
-        pinCode: user.pinCode,
-        relationship,
-        requestId,
-      })
-    }
+        // A user's PinCode is only ever shown back to themselves.
+        pinCode: isSelf ? user.pinCode : null,
+      }
+
+      if (isSelf) return { ...base, relationship: "self", requestId: null }
+      if (connected.has(idStr)) return { ...base, relationship: "connected", requestId: null }
+
+      const p = pendingMap.get(idStr)
+      if (p) {
+        return {
+          ...base,
+          relationship: p.outgoing ? "pending_outgoing" : "pending_incoming",
+          requestId: p.requestId,
+        }
+      }
+
+      return { ...base, relationship: "none", requestId: null }
+    })
 
     return res.status(200).json({ users: results })
   } catch (error) {

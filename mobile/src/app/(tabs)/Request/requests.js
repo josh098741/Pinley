@@ -1,18 +1,21 @@
-import { ActivityIndicator, ScrollView, StatusBar, Text, View } from "react-native";
+import { ActivityIndicator, Image, ScrollView, StatusBar, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import { useRequests } from "../../../context/RequestsContext";
 import {
   Avatar,
   ClayButton,
   ClayCard,
   ClayChip,
-  EmptyState,
   SectionTitle,
   clay,
-  displayName,
+  displayName
 } from "../../../components/clay";
 import { formatPinCode } from "../../../utils/pincode";
+
+// 👉 Add your illustration to: assets/images/requests-empty.png
+const REQUESTS_EMPTY_IMAGE = require("../../../../assets/images/requests_back.png");
 
 function RequestCard({ request }) {
   const { respond, cancelRequest } = useRequests();
@@ -106,6 +109,72 @@ function RecentCard({ request }) {
   );
 }
 
+function InfoBanner() {
+  return (
+    <ClayCard style={{ marginBottom: 18, paddingVertical: 16 }}>
+      <View className="flex-row items-center gap-4">
+        <View
+          className="items-center justify-center rounded-full bg-violet-100"
+          style={{ width: 48, height: 48 }}
+        >
+          <Ionicons name="shield-checkmark" size={24} color="#6d28d9" />
+        </View>
+        <View className="flex-1">
+          <Text className="text-[15px] font-bold text-slate-900">
+            You&apos;re in control
+          </Text>
+          <Text className="mt-0.5 text-[13px] font-medium text-slate-500">
+            Only you decide who can see your location.
+          </Text>
+        </View>
+      </View>
+    </ClayCard>
+  );
+}
+
+function RequestsEmptyState({ router }) {
+  return (
+    <View className="items-center px-2 pb-6 pt-2">
+      <Image
+        source={REQUESTS_EMPTY_IMAGE}
+        resizeMode="contain"
+        style={{ width: "100%", height: 260, marginBottom: 8 }}
+      />
+
+      <Text className="text-center text-[19px] font-bold text-slate-900">
+        No requests yet
+      </Text>
+      <Text className="mt-2 text-center text-[13.5px] font-medium leading-5 text-slate-500">
+        Stay close to the people who matter.{"\n"}Send a request and connect in seconds.
+      </Text>
+
+      <ClayButton
+        style={{ width: "100%", marginTop: 20 }}
+        label="Add someone"
+        icon="person-add"
+        onPress={() => router.push("/request-search")}
+      />
+
+      <View className="my-4 w-full flex-row items-center gap-3">
+        <View className="h-[1px] flex-1 bg-slate-200" />
+        <Text className="text-[12px] font-semibold text-slate-400">or</Text>
+        <View className="h-[1px] flex-1 bg-slate-200" />
+      </View>
+
+      <ClayButton
+        style={{ width: "100%" }}
+        label="Share your PinCode"
+        icon="qr-code-outline"
+        variant="ghost"
+        onPress={() => router.push("/profile")} // 👉 point this at your share-PinCode screen
+      />
+      <Text className="mt-2 text-[12px] font-medium text-slate-400">
+        Let others find and connect with you
+      </Text>
+    </View>
+  );
+}
+
 export default function Requests() {
   const router = useRouter();
   const { incoming, outgoing, recent, loading, connected } = useRequests();
@@ -141,6 +210,8 @@ export default function Requests() {
           />
         </View>
 
+        <InfoBanner />
+
         {loading ? (
           <View className="items-center justify-center py-20">
             <ActivityIndicator color={clay.primary} size="large" />
@@ -169,11 +240,7 @@ export default function Requests() {
             )}
 
             {incoming.length === 0 && outgoing.length === 0 && (
-              <EmptyState
-                icon="paper-plane-outline"
-                title="No requests yet"
-                subtitle="Tap “Add” to find someone by their PinCode, name or email and send them a request."
-              />
+              <RequestsEmptyState router={router} />
             )}
 
             {recent.length > 0 && (
