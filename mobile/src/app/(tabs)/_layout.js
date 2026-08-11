@@ -13,6 +13,7 @@ import Animated, {
 
 const ACTIVE = "#ffffff";
 const INACTIVE = "#d8cffb";
+const INDICATOR_INSET = 6; // horizontal gap between indicator and tab slot edges
 
 const AnimatedLinearGradient = Animated.createAnimatedComponent(LinearGradient);
 
@@ -53,7 +54,7 @@ function CustomTabBar({ state, descriptors, navigation }) {
 
   useEffect(() => {
     if (rowWidth > 0) {
-      translateX.value = withSpring(state.index * tabWidth, {
+      translateX.value = withSpring(state.index * tabWidth + INDICATOR_INSET, {
         damping: 18,
         stiffness: 180,
         mass: 0.6,
@@ -80,7 +81,7 @@ function CustomTabBar({ state, descriptors, navigation }) {
               end={{ x: 1, y: 1 }}
               style={[
                 styles.tabIndicator,
-                { width: tabWidth },
+                { width: tabWidth - INDICATOR_INSET * 2 },
                 indicatorStyle,
               ]}
             />

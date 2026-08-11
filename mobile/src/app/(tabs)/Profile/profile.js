@@ -66,7 +66,7 @@ export default function Profile() {
           {/* Log Out */}
           <Pressable
             onPress={() => signOut()}
-            className="mt-6 items-center py-4"
+            className="mt-0 items-center py-4"
           >
             <Text className="text-[15px] font-bold text-red-500">Log Out</Text>
           </Pressable>
