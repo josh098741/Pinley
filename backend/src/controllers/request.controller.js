@@ -29,6 +29,15 @@ export const getRequests = async (req, res) => {
     const me = await getCurrentUser(req)
     if (!me) return res.status(404).json({ message: "User not found" })
 
+    const [incoming, outgoing] = await Promise.all([
+      Request.find({ recipient: me._id, status: "pending" })
+        .populate("sender", USER_SELECT)
+        .sort({ createdAt: -1 }),
+      Request.find({ sender: me._id, status: "pending" })
+        .populate("recipient", USER_SELECT)
+        .sort({ createdAt: -1 }),
+    ])
+
     const recentList = await Request.find({
       $or: [{ sender: me._id }, { recipient: me._id }],
       status: { $in: ["accepted", "declined", "cancelled"] },

@@ -2,19 +2,23 @@ import { Webhook } from "svix"
 import { env } from "../utils/env.js"
 import { clerkClient } from "../utils/clerk.js"
 import User from "../models/user.models.js"
-import { generatePinCode } from "../utils/pincode.js"
-import { upsertUserByClerkId } from "../utils/userSync.js"
+import { upsertUserByClerkId, ensurePinCode } from "../utils/userSync.js"
 
 const webhook = env.CLERK_WEBHOOK_SECRET ? new Webhook(env.CLERK_WEBHOOK_SECRET) : null
 
 const buildPayload = (data) => {
+  const webhookEmails = Array.isArray(data.email_addresses) ? data.email_addresses : []
+  const clientEmails = Array.isArray(data.emailAddresses) ? data.emailAddresses : []
+
   const primaryEmail =
-    data.email_addresses?.find((e) => e.id === data.primary_email_address_id)?.email_address ??
-    data.emailAddresses?.find((e) => e.id === data.primaryEmailAddressId)?.emailAddress ??
-    data.email_addresses?.[0]?.email_address ??
-    data.emailAddresses?.[0]?.emailAddress ??
-    (typeof data.email === "string" ? data.email : "") ??
+    webhookEmails.find((e) => e.id === data.primary_email_address_id)?.email_address ||
+    clientEmails.find((e) => e.id === data.primaryEmailAddressId)?.emailAddress ||
+    webhookEmails[0]?.email_address ||
+    clientEmails[0]?.emailAddress ||
+    (typeof data.email === "string" ? data.email : "") ||
     `${data.id}@noemail.clerk`
+
+  const toString = (e) => (typeof e === "string" ? e : e.email_address || e.emailAddress || "")
 
   return {
     clerkUserId: data.id,
@@ -23,9 +27,7 @@ const buildPayload = (data) => {
     lastName: data.last_name || data.lastName || "",
     username: data.username || "",
     imageUrl: data.image_url || data.imageUrl || "",
-    emailAddresses: Array.isArray(data.email_addresses)
-      ? data.email_addresses.map((e) => e.email_address)
-      : data.emailAddresses || [],
+    emailAddresses: [...webhookEmails, ...clientEmails].map(toString).filter(Boolean),
   }
 }
 
@@ -117,9 +119,8 @@ export const getCurrentUser = async (req, res) => {
     if (!user) {
       const clerkUser = await clerkClient.users.getUser(userId)
       user = await upsertUserByClerkId(clerkUser.id, buildPayload(clerkUser))
-    } else if (!user.pinCode) {
-      user.pinCode = generatePinCode()
-      await user.save()
+    } else {
+      user = await ensurePinCode(user)
     }
 
     return res.status(200).json({ user })
