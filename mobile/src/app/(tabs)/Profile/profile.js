@@ -2,16 +2,20 @@ import { Pressable, SafeAreaView, ScrollView, Text, View, Image } from "react-na
 import { useClerk, useUser } from "@clerk/clerk-expo";
 import { Ionicons } from "@expo/vector-icons";
 
-function MenuItem({ icon, label, iconColor = "#fff", iconBg = "bg-slate-800", onPress }) {
+function MenuItem({ icon, label, iconColor = "#fff", iconBg = "bg-slate-800", onPress, last = false }) {
   return (
-    <Pressable className="flex-row items-center justify-between py-4" onPress={onPress}>
-      <View className="flex-row items-center gap-4">
-        <View className={`h-8 w-8 items-center justify-center rounded-full ${iconBg}`}>
-          <Ionicons name={icon} size={16} color={iconColor} />
+    <>
+      <Pressable className="flex-row items-center justify-between py-4" onPress={onPress}>
+        <View className="flex-row items-center gap-4">
+          <View className={`h-8 w-8 items-center justify-center rounded-full ${iconBg}`}>
+            <Ionicons name={icon} size={16} color={iconColor} />
+          </View>
+          <Text className="text-[15px] font-semibold text-slate-900">{label}</Text>
         </View>
-        <Text className="text-[15px] font-semibold text-slate-900">{label}</Text>
-      </View>
-    </Pressable>
+        <Ionicons name="chevron-forward" size={18} color="#cbd5e1" />
+      </Pressable>
+      {!last && <View className="h-px bg-slate-300" />}
+    </>
   );
 }
 
@@ -55,7 +59,7 @@ export default function Profile() {
           <MenuItem icon="globe-outline" label="Language" />
           <MenuItem icon="people" label="Invite Friends" iconBg="bg-blue-600" />
           <MenuItem icon="help-circle" label="Help & Support" />
-          <MenuItem icon="information-circle" label="About" />
+          <MenuItem icon="information-circle" label="About" last />
 
           {/* Log Out */}
           <Pressable
