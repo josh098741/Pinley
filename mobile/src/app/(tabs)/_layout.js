@@ -1,6 +1,7 @@
 import { Redirect, Tabs } from "expo-router";
 import { SignedIn, SignedOut } from "@clerk/clerk-expo";
 import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { BlurView } from "expo-blur";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -46,6 +47,7 @@ function GlassBackground() {
 }
 
 function CustomTabBar({ state, descriptors, navigation }) {
+  const insets = useSafeAreaInsets();
   const [rowWidth, setRowWidth] = useState(0);
   const tabCount = state.routes.length;
   const tabWidth = rowWidth / tabCount;
@@ -67,7 +69,7 @@ function CustomTabBar({ state, descriptors, navigation }) {
   }));
 
   return (
-    <View style={styles.tabBarWrapper}>
+    <View style={[styles.tabBarWrapper, { bottom: 24 + insets.bottom }]}>
       <View style={styles.tabBarPill}>
         <GlassBackground />
         <View
