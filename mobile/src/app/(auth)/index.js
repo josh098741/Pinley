@@ -13,6 +13,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Redirect, useRouter } from "expo-router";
 import {
   useAuth,
@@ -344,19 +345,19 @@ export default function AuthScreen({ initialMode = "choice" }) {
 
   if (!authLoaded || !signInLoaded || !signUpLoaded || !fontsLoaded) {
     return (
-      <View style={s.root}>
+      <SafeAreaView style={s.root}>
         <StatusBar barStyle="dark-content" backgroundColor={C.bg} />
         <View style={s.bootLoading}>
           <ActivityIndicator color={C.accent} size="large" />
           <Text style={s.loadingSub}>Preparing secure sign-in...</Text>
         </View>
-      </View>
+      </SafeAreaView>
     );
   }
 
   if (mode === "choice") {
     return (
-      <View style={s.root}>
+      <SafeAreaView style={s.root}>
         <StatusBar barStyle="dark-content" backgroundColor={C.heroTop} />
 
         <View style={s.hero}>
@@ -456,13 +457,13 @@ export default function AuthScreen({ initialMode = "choice" }) {
           </View>
         </Modal>
         <LoadingOverlay />
-      </View>
+      </SafeAreaView>
     );
   }
 
   if (pendingVerification) {
     return (
-      <View style={s.root}>
+      <SafeAreaView style={s.root}>
         <StatusBar barStyle="dark-content" backgroundColor={C.bg} />
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -520,12 +521,12 @@ export default function AuthScreen({ initialMode = "choice" }) {
           </ScrollView>
         </KeyboardAvoidingView>
         <LoadingOverlay />
-      </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={s.root}>
+    <SafeAreaView style={s.root}>
       <StatusBar barStyle="dark-content" backgroundColor={C.bg} />
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -643,7 +644,7 @@ export default function AuthScreen({ initialMode = "choice" }) {
         </ScrollView>
       </KeyboardAvoidingView>
       <LoadingOverlay />
-    </View>
+    </SafeAreaView>
   );
 }
 

@@ -1,4 +1,5 @@
-import { Pressable, SafeAreaView, ScrollView, Text, View, Image } from "react-native";
+import { Pressable, ScrollView, StatusBar, Text, View, Image } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useClerk, useUser } from "@clerk/clerk-expo";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -25,11 +26,12 @@ export default function Profile() {
 
   return (
     <SafeAreaView className="flex-1 bg-white">
+      <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
       <ScrollView
-        className="flex-1 px-6 pt-8"
+        className="flex-1 px-6"
         contentContainerStyle={{ paddingBottom: 100 }}
       >
-        <Text className="mb-8 text-[28px] font-bold text-slate-900 tracking-tight">Settings</Text>
+        <Text className="mb-8 text-[28px] font-bold text-slate-900 tracking-tight">Profile</Text>
 
         {/* Profile Card */}
         <Pressable className="mb-8 flex-row items-center justify-between">

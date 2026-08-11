@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { Image, SafeAreaView, Text, View } from "react-native";
+import { Image, StatusBar, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth, useUser } from "@clerk/clerk-expo";
 import { syncUserToDatabase } from "../../(auth)/index.js";
 
@@ -52,6 +53,7 @@ export default function Home() {
 
   return (
     <SafeAreaView className="flex-1 bg-white">
+      <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
       <View className="flex-1 items-center justify-center px-6">
         <Image source={LOGO} className="mb-6 h-24 w-24" resizeMode="contain" />
         <Text className="text-3xl font-bold text-slate-900">Pinley</Text>
