@@ -39,7 +39,7 @@ import {
 } from "@expo-google-fonts/inter";
 import { API_URL_CANDIDATES } from "../../config";
 
-const LOGO = require("../../../assets/images/pinley_image.png");
+const LOGO = require("../../../assets/images/pinley_background_image.png");
 
 const REQUEST_TIMEOUT_MS = 8000;
 
