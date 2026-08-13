@@ -1,4 +1,4 @@
-import { ActivityIndicator, ScrollView, StatusBar, Text, View } from "react-native";
+import { ActivityIndicator, Image, ScrollView, StatusBar, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -11,6 +11,11 @@ import {
   displayName,
 } from "../../../components/clay";
 import { formatPinCode } from "../../../utils/pincode";
+
+// 👉 Add your illustration to: assets/images/pinley_image_circles.png
+const CIRCLES_EMPTY_IMAGE = require("../../../../assets/images/pinley_image_circles.png");
+// 👉 Add your illustration to: assets/images/pinley_image_black.png
+const BANNER_IMAGE = require("../../../../assets/images/pinley_image_black.png");
 
 function PersonCard({ person }) {
   return (
@@ -36,24 +41,52 @@ function PersonCard({ person }) {
   );
 }
 
-function CirclesEmptyState({ router }) {
+function InfoBanner() {
   return (
-    <View className="items-center px-2 pb-6 pt-4">
-      <View className="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-violet-100 border border-violet-200">
-        <Ionicons name="people-outline" size={30} color={clay.primary} />
+    <View
+      className="mb-5 flex-row items-center rounded-[22px] bg-violet-50"
+      style={{ paddingLeft: 18, paddingRight: 4, paddingVertical: 16 }}
+    >
+      <View
+        className="mr-3 items-center justify-center rounded-full bg-violet-600"
+        style={{ width: 42, height: 42 }}
+      >
+        <Ionicons name="people" size={19} color="#fff" />
       </View>
+
+      <View className="flex-1 pr-1">
+        <Text className="text-[16px] font-extrabold text-violet-700">
+          Your circle, your way
+        </Text>
+        <Text className="mt-1 text-[12px] font-medium leading-[17px] text-slate-500">
+          Share moments, stay updated and know where your people are.
+        </Text>
+      </View>
+
+      <Image
+        source={BANNER_IMAGE}
+        resizeMode="contain"
+        style={{ width: 128, height: 128, marginRight: -6 }}
+      />
+    </View>
+  );
+}
+
+function CirclesEmptyState() {
+  return (
+    <View className="items-center px-2 pb-4 pt-2">
+      <Image
+        source={CIRCLES_EMPTY_IMAGE}
+        resizeMode="contain"
+        style={{ width: "100%", height: 260, marginBottom: 8 }}
+      />
+
       <Text className="text-center text-[19px] font-bold text-slate-900">
         Your circle is empty
       </Text>
       <Text className="mt-2 text-center text-[13.5px] font-medium leading-5 text-slate-500">
-        Send a request to someone and connect in seconds. Once they accept, they&apos;ll show up here.
+        Create a circle and add the people who matter.{"\n"}Share moments, stay updated and know where your people are.
       </Text>
-      <ClayButton
-        style={{ width: "100%", marginTop: 20 }}
-        label="Add someone"
-        icon="person-add"
-        onPress={() => router.push("/request-search")}
-      />
     </View>
   );
 }
@@ -97,13 +130,17 @@ export default function Circles() {
           </View>
         ) : connections.length > 0 ? (
           <>
+            <InfoBanner />
             <Text className="mb-2 text-[16px] font-bold text-slate-800">Connected</Text>
             {connections.map((person) => (
               <PersonCard key={person._id} person={person} />
             ))}
           </>
         ) : (
-          <CirclesEmptyState router={router} />
+          <>
+            <InfoBanner />
+            <CirclesEmptyState />
+          </>
         )}
       </ScrollView>
     </SafeAreaView>
