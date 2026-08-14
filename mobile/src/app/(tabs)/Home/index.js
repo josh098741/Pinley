@@ -129,6 +129,7 @@ export default function Home() {
         style={{ flex: 1 }}
         initialRegion={PINLEY_REGION}
         showsUserLocation
+        showsMyLocationButton={false}
       />
       <SidePanel />
     </View>

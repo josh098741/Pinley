@@ -16,7 +16,7 @@ function PanelButton({ icon, label, onPress, active }) {
         <Ionicons
           name={icon}
           size={20}
-          color={active ? "#FFFFFF" : "#FFFFFF"}
+          color="#FFFFFF"
         />
       </View>
       <View style={styles.actionLabelWrap}>
@@ -38,15 +38,15 @@ export function SidePanel() {
   return (
     <View style={styles.anchor} pointerEvents="box-none">
       <View style={styles.panel}>
-        <View style={styles.grip} />
+        <View style={styles.strip} />
         <Pressable
           onPress={handleToggle}
-          style={({ pressed }) => [styles.handle, pressed && styles.handlePressed]}
+          style={({ pressed }) => [styles.handle, open && styles.handleOpen, pressed && styles.handlePressed]}
           accessibilityRole="button"
           accessibilityLabel={open ? "Close panel" : "Open panel"}
         >
           <Ionicons
-            name={open ? "chevron-forward" : "menu"}
+            name="chevron-forward"
             size={22}
             color="#FFFFFF"
           />
@@ -55,14 +55,19 @@ export function SidePanel() {
         {open ? (
           <View style={styles.actions}>
             <PanelButton
-              icon="home"
-              label="Home"
-              onPress={() => console.log("Home")}
+              icon="people"
+              label="Friends"
+              onPress={() => console.log("Friends")}
             />
             <PanelButton
               icon="bookmark"
               label="Saved"
               onPress={() => console.log("Saved")}
+            />
+            <PanelButton
+              icon="warning"
+              label="SOS"
+              onPress={() => console.log("SOS")}
             />
             <PanelButton
               icon="settings"
@@ -89,12 +94,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
   },
-  grip: {
-    width: 8,
+  strip: {
+    width: 6,
     height: 72,
-    borderTopLeftRadius: 10,
-    borderBottomLeftRadius: 10,
     backgroundColor: PURPLE_DEEP,
+    borderTopLeftRadius: 6,
+    borderBottomLeftRadius: 6,
   },
   handle: {
     width: 46,
@@ -106,12 +111,19 @@ const styles = StyleSheet.create({
     backgroundColor: PURPLE,
     borderWidth: 2,
     borderRightWidth: 0,
+    borderLeftWidth: 8,
     borderColor: "#FFFFFF",
+    borderLeftColor: PURPLE_DEEP,
     shadowColor: PURPLE_DEEP,
     shadowOpacity: 0.55,
     shadowRadius: 14,
     shadowOffset: { width: -3, height: 6 },
     elevation: 10,
+  },
+  handleOpen: {
+    height: undefined,
+    borderTopLeftRadius: 24,
+    borderBottomLeftRadius: 24,
   },
   handlePressed: {
     transform: [{ scale: 0.94 }],
@@ -135,6 +147,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: -4, height: 10 },
     elevation: 12,
   },
+  stripBody: {},
   action: {
     alignItems: "center",
     justifyContent: "center",
