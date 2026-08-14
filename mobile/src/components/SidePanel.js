@@ -41,12 +41,17 @@ export function SidePanel() {
         <View style={styles.strip} />
         <Pressable
           onPress={handleToggle}
-          style={({ pressed }) => [styles.handle, open && styles.handleOpen, pressed && styles.handlePressed]}
+          hitSlop={16}
+          style={({ pressed }) => [
+            styles.handle,
+            open && styles.handleOpen,
+            pressed && styles.handlePressed,
+          ]}
           accessibilityRole="button"
           accessibilityLabel={open ? "Close panel" : "Open panel"}
         >
           <Ionicons
-            name="chevron-forward"
+            name={open ? "chevron-forward" : "chevron-back"}
             size={22}
             color={PURPLE}
           />
@@ -147,7 +152,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: -4, height: 10 },
     elevation: 12,
   },
-  stripBody: {},
   action: {
     alignItems: "center",
     justifyContent: "center",
