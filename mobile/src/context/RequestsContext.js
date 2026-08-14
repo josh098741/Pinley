@@ -141,7 +141,8 @@ export function RequestsProvider({ children }) {
         method: "POST",
         body: { recipientId, pinCode },
       });
-      await refresh();
+      // Refresh in the background — don't block the caller
+      refresh().catch(() => {});
       return data.request || null;
     },
     [refresh]
@@ -156,8 +157,9 @@ export function RequestsProvider({ children }) {
         method: "PATCH",
         body: { action },
       });
-      await refresh();
-      if (action === "accept") await refreshConnections();
+      // Refresh in the background
+      refresh().catch(() => {});
+      if (action === "accept") refreshConnections().catch(() => {});
     },
     [refresh, refreshConnections]
   );
@@ -170,7 +172,8 @@ export function RequestsProvider({ children }) {
         token,
         method: "DELETE",
       });
-      await refresh();
+      // Refresh in the background
+      refresh().catch(() => {});
     },
     [refresh]
   );

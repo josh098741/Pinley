@@ -1,6 +1,6 @@
 import { API_URL_CANDIDATES } from "../config";
 
-const REQUEST_TIMEOUT_MS = 4000;
+const REQUEST_TIMEOUT_MS = 10000;
 
 export const apiRequest = async (
   path,

@@ -91,7 +91,8 @@ export default function RequestSearch() {
   const [searching, setSearching] = useState(false);
   const [searched, setSearched] = useState(false);
   const [error, setError] = useState("");
-  const [busyId, setBusyId] = useState(null);
+  const [busyIds, setBusyIds] = useState(new Set());
+  const busyIdsRef = useRef(new Set());
   const [focused, setFocused] = useState(false);
   const getTokenRef = useRef(getToken);
   getTokenRef.current = getToken;
@@ -99,6 +100,16 @@ export default function RequestSearch() {
   const abortRef = useRef(null);
   const timerRef = useRef(null);
   const inputRef = useRef(null);
+
+  const markBusy = (id) => {
+    busyIdsRef.current = new Set([...busyIdsRef.current, id]);
+    setBusyIds(new Set(busyIdsRef.current));
+  };
+  const markFree = (id) => {
+    busyIdsRef.current = new Set([...busyIdsRef.current].filter((x) => x !== id));
+    setBusyIds(new Set(busyIdsRef.current));
+  };
+  const isBusy = (id) => id != null && busyIdsRef.current.has(id);
 
   const runSearch = useCallback(async (value) => {
     const norm = normalize(value);
@@ -159,31 +170,36 @@ export default function RequestSearch() {
   }, [query, runSearch]);
 
   const handleSend = async (userId) => {
-    setBusyId(userId);
+    if (isBusy(userId)) return;
+    markBusy(userId);
     setError("");
     let ok = false;
     try {
       const sent = await withTimeout(sendRequest({ recipientId: userId }));
       ok = true;
-      if (sent) {
-        setResults((prev) =>
-          prev.map((u) =>
-            u._id === userId
-              ? { ...u, relationship: "pending_outgoing", requestId: sent._id }
-              : u
-          )
-        );
-      }
+      // Optimistically update the relationship so the button switches immediately
+      setResults((prev) =>
+        prev.map((u) =>
+          u._id === userId
+            ? {
+                ...u,
+                relationship: "pending_outgoing",
+                requestId: sent?._id ?? u.requestId,
+              }
+            : u
+        )
+      );
     } catch (err) {
       setError(err.message || "Could not send request.");
     } finally {
-      setBusyId(null);
-      if (ok) await runSearch(query).catch(() => {});
+      markFree(userId);
+      if (ok) runSearch(query).catch(() => {});
     }
   };
 
   const handleAccept = async (requestId) => {
-    setBusyId(requestId);
+    if (isBusy(requestId)) return;
+    markBusy(requestId);
     setError("");
     let ok = false;
     try {
@@ -192,13 +208,14 @@ export default function RequestSearch() {
     } catch (err) {
       setError(err.message || "Could not accept request.");
     } finally {
-      setBusyId(null);
-      if (ok) await runSearch(query).catch(() => {});
+      markFree(requestId);
+      if (ok) runSearch(query).catch(() => {});
     }
   };
 
   const handleCancel = async (requestId) => {
-    setBusyId(requestId);
+    if (isBusy(requestId)) return;
+    markBusy(requestId);
     setError("");
     let ok = false;
     try {
@@ -207,13 +224,13 @@ export default function RequestSearch() {
     } catch (err) {
       setError(err.message || "Could not cancel request.");
     } finally {
-      setBusyId(null);
-      if (ok) await runSearch(query).catch(() => {});
+      markFree(requestId);
+      if (ok) runSearch(query).catch(() => {});
     }
   };
 
   const renderAction = (user) => {
-    const busy = busyId === user._id || busyId === user.requestId;
+    const busy = isBusy(user._id) || (user.requestId != null && isBusy(user.requestId));
     switch (user.relationship) {
       case "none":
         return (
