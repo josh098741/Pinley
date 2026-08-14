@@ -48,7 +48,7 @@ export function SidePanel() {
           <Ionicons
             name="chevron-forward"
             size={22}
-            color="#FFFFFF"
+            color={PURPLE}
           />
         </Pressable>
 
