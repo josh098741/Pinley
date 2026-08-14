@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useMap } from "../context/MapContext";
 
 const PURPLE = "#7C3AED";
 const PURPLE_DEEP = "#5B21B6";
@@ -30,6 +31,7 @@ function PanelButton({ icon, label, onPress, active }) {
 
 export function SidePanel() {
   const [open, setOpen] = useState(false);
+  const { recenter } = useMap();
 
   const handleToggle = () => {
     setOpen((prev) => !prev);
@@ -59,6 +61,11 @@ export function SidePanel() {
 
         {open ? (
           <View style={styles.actions}>
+            <PanelButton
+              icon="locate"
+              label="Locate"
+              onPress={() => recenter()}
+            />
             <PanelButton
               icon="people"
               label="Friends"
