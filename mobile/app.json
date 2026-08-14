@@ -10,7 +10,10 @@
     "scheme": "pinley",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Pinley uses your location to show where you are on the map."
+      }
     },
     "android": {
       "package": "com.infinityquestlabs.pinley",

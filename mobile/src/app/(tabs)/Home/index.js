@@ -1,37 +1,35 @@
-import { useEffect, useRef, useState } from "react";
-import { Image, StatusBar, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { useAuth, useUser } from "@clerk/clerk-expo";
+import { useEffect, useRef } from "react";
+import { StatusBar, View } from "react-native";
+import MapView, { PROVIDER_GOOGLE } from "react-native-maps";
+import * as Location from "expo-location";
+import { useAuth } from "@clerk/clerk-expo";
 import { syncUserToDatabase } from "../../(auth)/index.js";
 
-const LOGO = require("../../../../assets/images/pinley_image.png");
+const PINLEY_REGION = {
+  latitude: 37.78825,
+  longitude: -122.4324,
+  latitudeDelta: 0.0922,
+  longitudeDelta: 0.0421,
+};
 
 export default function Home() {
-  const { user } = useUser();
   const { getToken, isSignedIn, sessionId } = useAuth();
-  const [syncState, setSyncState] = useState("syncing");
   const getTokenRef = useRef(getToken);
   getTokenRef.current = getToken;
+  const mapRef = useRef(null);
 
   useEffect(() => {
     if (!isSignedIn || !sessionId) return;
     let cancelled = false;
-    setSyncState("syncing");
 
     const performSync = async () => {
       try {
         const token = await getTokenRef.current();
         if (!token || cancelled) return;
-        const res = await syncUserToDatabase(token);
-        if (res?.user && !cancelled) {
-          setSyncState("synced");
-        } else if (!cancelled) {
-          setSyncState("error");
-        }
+        await syncUserToDatabase(token);
       } catch (err) {
-        console.error("Account sync error:", err);
         if (!cancelled) {
-          setSyncState("error");
+          console.error("Account sync error:", err);
         }
       }
     };
@@ -43,25 +41,67 @@ export default function Home() {
     };
   }, [isSignedIn, sessionId]);
 
-  const syncColor = syncState === "synced" ? "text-green-400" : "text-amber-400";
-  const syncText =
-    syncState === "syncing"
-      ? "Syncing your account…"
-      : syncState === "synced"
-        ? "Account synced to database"
-        : "Account sync pending — check your connection";
+  useEffect(() => {
+    let subscription;
+
+    const startTracking = async () => {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        console.warn("Location permission not granted");
+        return;
+      }
+
+      const current = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.BestForNavigation,
+      });
+      const { latitude, longitude } = current.coords;
+      mapRef.current?.animateToRegion(
+        {
+          latitude,
+          longitude,
+          latitudeDelta: 0.005,
+          longitudeDelta: 0.005,
+        },
+        1000
+      );
+
+      subscription = await Location.watchPositionAsync(
+        {
+          accuracy: Location.Accuracy.BestForNavigation,
+          distanceInterval: 1,
+          timeInterval: 5000,
+        },
+        ({ coords }) => {
+          mapRef.current?.animateToRegion(
+            {
+              latitude: coords.latitude,
+              longitude: coords.longitude,
+              latitudeDelta: 0.005,
+              longitudeDelta: 0.005,
+            },
+            1000
+          );
+        }
+      );
+    };
+
+    startTracking();
+
+    return () => {
+      subscription?.remove();
+    };
+  }, []);
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
-      <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
-      <View className="flex-1 items-center justify-center px-6">
-        <Image source={LOGO} className="mb-6 h-24 w-24" resizeMode="contain" />
-        <Text className="text-3xl font-bold text-slate-900">Pinley</Text>
-        <Text className="mt-3 text-base text-slate-500">
-          {user?.emailAddresses?.[0]?.emailAddress || "You are signed in"}
-        </Text>
-        <Text className={`mt-2 text-sm ${syncColor}`}>{syncText}</Text>
-      </View>
-    </SafeAreaView>
+    <View style={{ flex: 1 }}>
+      <StatusBar translucent barStyle="dark-content" backgroundColor="transparent" />
+      <MapView
+        ref={mapRef}
+        provider={PROVIDER_GOOGLE}
+        style={{ flex: 1 }}
+        initialRegion={PINLEY_REGION}
+        showsUserLocation
+      />
+    </View>
   );
 }
