@@ -4,6 +4,7 @@ import { tokenCache } from "@clerk/clerk-expo/token-cache";
 import { Stack } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { RequestsProvider } from "../context/RequestsContext";
+import { MapProvider } from "../context/MapContext";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -13,7 +14,8 @@ export default function RootLayout() {
   return (
     <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
       <RequestsProvider>
-        <Stack
+        <MapProvider>
+          <Stack
           screenOptions={{
             headerShown: false,
           }}
@@ -29,7 +31,8 @@ export default function RootLayout() {
             name="[...unmatched]"
             options={{ headerShown: false }}
           />
-        </Stack>
+          </Stack>
+        </MapProvider>
       </RequestsProvider>
     </ClerkProvider>
   );
