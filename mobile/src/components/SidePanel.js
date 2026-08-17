@@ -76,7 +76,7 @@ export function SidePanel() {
             <PanelButton
               icon="calendar"
               label="Events"
-              onPress={() => console.log("Events")}
+              onPress={() => router.push("/events")}
             />
             <PanelButton
               icon="warning"
