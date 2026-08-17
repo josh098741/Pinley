@@ -74,9 +74,9 @@ export function SidePanel() {
               onPress={() => console.log("Friends")}
             />
             <PanelButton
-              icon="bookmark"
-              label="Saved"
-              onPress={() => console.log("Saved")}
+              icon="calendar"
+              label="Events"
+              onPress={() => console.log("Events")}
             />
             <PanelButton
               icon="warning"
