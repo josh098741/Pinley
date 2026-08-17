@@ -37,7 +37,7 @@ function HeroBanner() {
     <ClayCard style={{ marginTop: 16, padding: 0, overflow: "hidden" }}>
       <View
         className="flex-row items-center px-5 py-5"
-        style={{ backgroundColor: clay.primarySoft }}
+        style={{ backgroundColor: clay.primarySoft, borderRadius: 24 }}
       >
         <View className="flex-1" style={{ paddingRight: 12 }}>
           <Text
@@ -263,12 +263,13 @@ function EventsEmptyState() {
 
 function CreateEventBanner({ onPress }) {
   return (
-    <ClayCard style={{ marginTop: 16, padding: 0, overflow: "hidden" }} onPress={onPress}>
+    <ClayCard style={{ marginTop: 24, padding: 0, overflow: "hidden" }} onPress={onPress}>
       <LinearGradient
         colors={[clay.primary, clay.primaryDeep]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         className="flex-row items-center justify-between px-5 py-4"
+        style={{ borderRadius: 24 }}
       >
         <View className="flex-1 flex-row items-center">
           <View
