@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import { useMap } from "../context/MapContext";
 
 const PURPLE = "#7C3AED";
@@ -32,6 +33,7 @@ function PanelButton({ icon, label, onPress, active }) {
 export function SidePanel() {
   const [open, setOpen] = useState(false);
   const { recenter } = useMap();
+  const router = useRouter();
 
   const handleToggle = () => {
     setOpen((prev) => !prev);
@@ -79,7 +81,7 @@ export function SidePanel() {
             <PanelButton
               icon="warning"
               label="SOS"
-              onPress={() => console.log("SOS")}
+              onPress={() => router.push("/sos")}
             />
             <PanelButton
               icon="settings"
