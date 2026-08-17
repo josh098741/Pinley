@@ -5,6 +5,7 @@ import { Stack } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { RequestsProvider } from "../context/RequestsContext";
 import { MapProvider } from "../context/MapContext";
+import { EventsProvider } from "../context/EventsContext";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -15,6 +16,7 @@ export default function RootLayout() {
     <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
       <RequestsProvider>
         <MapProvider>
+          <EventsProvider>
           <Stack
           screenOptions={{
             headerShown: false,
@@ -24,6 +26,7 @@ export default function RootLayout() {
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="setup-check" />
           <Stack.Screen name="sos" />
+          <Stack.Screen name="events" />
           <Stack.Screen
             name="request-search"
             options={{ presentation: "modal" }}
@@ -33,6 +36,7 @@ export default function RootLayout() {
             options={{ headerShown: false }}
           />
           </Stack>
+          </EventsProvider>
         </MapProvider>
       </RequestsProvider>
     </ClerkProvider>
