@@ -206,9 +206,12 @@ const EMPTY_FEATURES = [
   },
 ];
 
-function FeatureCard({ icon, title, subtitle }) {
+function FeatureCard({ icon, title, subtitle, divider }) {
   return (
-    <View className="flex-1 items-center rounded-2xl bg-white px-2.5 py-4">
+    <View
+      className="flex-1 items-center px-2.5 py-4"
+      style={divider ? { borderLeftWidth: 1, borderLeftColor: clay.line } : null}
+    >
       <View
         className="items-center justify-center rounded-2xl"
         style={{
@@ -252,18 +255,20 @@ function EventsEmptyState() {
         </View>
       </ClayCard>
 
-      <View className="mt-3 flex-row" style={{ gap: 10 }}>
-        {EMPTY_FEATURES.map((f) => (
-          <FeatureCard key={f.title} {...f} />
-        ))}
-      </View>
+      <ClayCard style={{ marginTop: 12, padding: 0 }}>
+        <View className="flex-row">
+          {EMPTY_FEATURES.map((f, i) => (
+            <FeatureCard key={f.title} {...f} divider={i > 0} />
+          ))}
+        </View>
+      </ClayCard>
     </View>
   );
 }
 
 function CreateEventBanner({ onPress }) {
   return (
-    <ClayCard style={{ marginTop: 24, padding: 0, overflow: "hidden" }} onPress={onPress}>
+    <ClayCard style={{ marginTop: 32, padding: 0, overflow: "hidden" }} onPress={onPress}>
       <LinearGradient
         colors={[clay.primary, clay.primaryDeep]}
         start={{ x: 0, y: 0 }}
