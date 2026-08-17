@@ -5,6 +5,41 @@ import Request from "../models/request.models.js"
 const CODE_LENGTH = 8
 const MAX_CODE_LENGTH = 50
 
+const isValidCoord = (value) => typeof value === "number" && Number.isFinite(value)
+
+export const updateLocation = async (req, res) => {
+  try {
+    const clerkUserId = req.auth?.sub || req.auth?.userId
+    const { latitude, longitude, accuracy } = req.body
+
+    if (!isValidCoord(latitude) || !isValidCoord(longitude)) {
+      return res
+        .status(400)
+        .json({ message: "Valid latitude and longitude are required" })
+    }
+
+    const lastKnownLocation = {
+      latitude,
+      longitude,
+      accuracy: isValidCoord(accuracy) ? accuracy : undefined,
+      updatedAt: new Date(),
+    }
+
+    const me = await User.findOneAndUpdate(
+      { clerkUserId },
+      { $set: { lastKnownLocation } },
+      { new: true, runValidators: true }
+    )
+
+    if (!me) return res.status(404).json({ message: "User not found" })
+
+    return res.status(200).json({ lastKnownLocation: me.lastKnownLocation })
+  } catch (error) {
+    console.error("Error updating location:", error)
+    return res.status(500).json({ message: "Internal server error" })
+  }
+}
+
 const normalizeCode = (input = "") =>
   input
     .toUpperCase()

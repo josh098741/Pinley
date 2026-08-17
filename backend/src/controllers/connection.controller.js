@@ -1,7 +1,7 @@
 import User from "../models/user.models.js"
 import Connection from "../models/connection.models.js"
 
-const USER_SELECT = "firstName lastName email username imageUrl pinCode"
+const USER_SELECT = "firstName lastName email username imageUrl pinCode lastKnownLocation"
 
 export const getConnections = async (req, res) => {
   try {
