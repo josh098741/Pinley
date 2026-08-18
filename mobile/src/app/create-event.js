@@ -162,6 +162,10 @@ function DateScrollPicker({ selectedDate, onDateChange }) {
     Math.min(initDate.getDate() - 1, days.length - 1)
   );
 
+  // Tracks the most recent date we reported to the parent so we only call
+  // onDateChange when the value actually changes (prevents feedback loops).
+  const lastEmittedRef = useRef(null);
+
   // Clamp dayIdx when month/year changes and propagate
   const clampedDayIdx = Math.min(dayIdx, days.length - 1);
 
@@ -171,19 +175,31 @@ function DateScrollPicker({ selectedDate, onDateChange }) {
       const mo = mIdx;
       const daysInMonth = new Date(yr, mo + 1, 0).getDate();
       const day = Math.min(dIdx + 1, daysInMonth);
-      onDateChange(new Date(yr, mo, day));
+      const next = new Date(yr, mo, day);
+
+      if (
+        lastEmittedRef.current &&
+        lastEmittedRef.current.getTime() === next.getTime()
+      ) {
+        return;
+      }
+
+      lastEmittedRef.current = next;
+      onDateChange(next);
     },
     [years, onDateChange]
   );
 
+  const dayIdxRef = useRef(dayIdx);
+  dayIdxRef.current = dayIdx;
+
   const handleMonthSelect = useCallback(
     (idx) => {
+      const maxDay = buildDayList(idx, years[yearIdx]).length - 1;
+      const clamped = Math.min(dayIdxRef.current, maxDay);
       setMonthIdx(idx);
-      setDayIdx((prev) => {
-        const clamped = Math.min(prev, buildDayList(idx, years[yearIdx]).length - 1);
-        notify(idx, clamped, yearIdx);
-        return clamped;
-      });
+      setDayIdx(clamped);
+      notify(idx, clamped, yearIdx);
     },
     [yearIdx, years, notify]
   );
@@ -198,12 +214,11 @@ function DateScrollPicker({ selectedDate, onDateChange }) {
 
   const handleYearSelect = useCallback(
     (idx) => {
+      const maxDay = buildDayList(monthIdx, years[idx]).length - 1;
+      const clamped = Math.min(dayIdxRef.current, maxDay);
       setYearIdx(idx);
-      setDayIdx((prev) => {
-        const clamped = Math.min(prev, buildDayList(monthIdx, years[idx]).length - 1);
-        notify(monthIdx, clamped, idx);
-        return clamped;
-      });
+      setDayIdx(clamped);
+      notify(monthIdx, clamped, idx);
     },
     [monthIdx, years, notify]
   );
@@ -280,21 +295,48 @@ function TimeScrollPicker({ selectedTime, onTimeChange }) {
   const [minuteIdx, setMinuteIdx] = useState(initMinuteIdx);   // 0-11
   const [periodIdx, setPeriodIdx] = useState(initPeriodIdx);   // 0=AM 1=PM
 
+  // Tracks the most recent time we reported to the parent so we only call
+  // onTimeChange when the value actually changes (prevents feedback loops).
+  const lastEmittedRef = useRef(null);
+
+  const composeTime = useCallback((hIdx, mIdx, pIdx) => {
+    const h12 = hIdx + 1;
+    const isAM = pIdx === 0;
+    let h24 = h12 % 12 + (isAM ? 0 : 12);
+    const d = new Date();
+    d.setHours(h24, mIdx * 5, 0, 0);
+    return d;
+  }, []);
+
   const notify = useCallback(
     (hIdx, mIdx, pIdx) => {
-      const h12 = hIdx + 1;
-      const isAM = pIdx === 0;
-      let h24 = h12 % 12 + (isAM ? 0 : 12);
-      const d = new Date();
-      d.setHours(h24, mIdx * 5, 0, 0);
-      onTimeChange(d);
+      const next = composeTime(hIdx, mIdx, pIdx);
+
+      if (
+        lastEmittedRef.current &&
+        lastEmittedRef.current.getTime() === next.getTime()
+      ) {
+        return;
+      }
+
+      lastEmittedRef.current = next;
+      onTimeChange(next);
     },
-    [onTimeChange]
+    [composeTime, onTimeChange]
   );
 
-  const handleHour = useCallback((idx) => { setHourIdx(idx); notify(idx, minuteIdx, periodIdx); }, [minuteIdx, periodIdx, notify]);
-  const handleMinute = useCallback((idx) => { setMinuteIdx(idx); notify(hourIdx, idx, periodIdx); }, [hourIdx, periodIdx, notify]);
-  const handlePeriod = useCallback((idx) => { setPeriodIdx(idx); notify(hourIdx, minuteIdx, idx); }, [hourIdx, minuteIdx, notify]);
+  const handleHour = useCallback(
+    (idx) => { setHourIdx(idx); notify(idx, minuteIdx, periodIdx); },
+    [minuteIdx, periodIdx, notify]
+  );
+  const handleMinute = useCallback(
+    (idx) => { setMinuteIdx(idx); notify(hourIdx, idx, periodIdx); },
+    [hourIdx, periodIdx, notify]
+  );
+  const handlePeriod = useCallback(
+    (idx) => { setPeriodIdx(idx); notify(hourIdx, minuteIdx, idx); },
+    [hourIdx, minuteIdx, notify]
+  );
 
   return (
     <View style={{ position: "relative" }}>

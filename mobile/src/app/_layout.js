@@ -14,35 +14,35 @@ const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
 export default function RootLayout() {
   return (
-    <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
-      <GestureHandlerRootView style={{ flex: 1 }}>
-      <RequestsProvider>
-        <MapProvider>
-          <EventsProvider>
-          <Stack
-          screenOptions={{
-            headerShown: false,
-          }}
-        >
-          <Stack.Screen name="index" />
-          <Stack.Screen name="(tabs)" />
-          <Stack.Screen name="setup-check" />
-          <Stack.Screen name="sos" />
-          <Stack.Screen name="events" />
-          <Stack.Screen name="create-event" />
-          <Stack.Screen
-            name="request-search"
-            options={{ presentation: "modal" }}
-          />
-          <Stack.Screen
-            name="[...unmatched]"
-            options={{ headerShown: false }}
-          />
-          </Stack>
-          </EventsProvider>
-        </MapProvider>
-      </RequestsProvider>
-      </GestureHandlerRootView>
-    </ClerkProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
+        <RequestsProvider>
+          <MapProvider>
+            <EventsProvider>
+              <Stack
+                screenOptions={{
+                  headerShown: false,
+                }}
+              >
+                <Stack.Screen name="index" />
+                <Stack.Screen name="(tabs)" />
+                <Stack.Screen name="setup-check" />
+                <Stack.Screen name="sos" />
+                <Stack.Screen name="events" />
+                <Stack.Screen name="create-event" />
+                <Stack.Screen
+                  name="request-search"
+                  options={{ presentation: "modal" }}
+                />
+                <Stack.Screen
+                  name="[...unmatched]"
+                  options={{ headerShown: false }}
+                />
+              </Stack>
+            </EventsProvider>
+          </MapProvider>
+        </RequestsProvider>
+      </ClerkProvider>
+    </GestureHandlerRootView>
   );
 }
