@@ -14,6 +14,11 @@ import { LinearGradient } from "expo-linear-gradient";
 import { ClayCard, SectionTitle, clay } from "../components/clay";
 import { useEvents } from "../context/EventsContext";
 
+const CARD_BORDER = {
+  borderWidth: 2,
+  borderColor: clay.primary,
+};
+
 const TONE_BY_STATUS = {
   going: "success",
   attending: "success",
@@ -32,14 +37,39 @@ const STATUS_LABEL = {
   cancelled: "Cancelled",
 };
 
-function HeroBanner() {
+function Sparkle({ top, left, size = 8, opacity = 0.5 }) {
   return (
-    <ClayCard style={{ marginTop: 16, padding: 0, overflow: "hidden" }}>
+    <View style={{ position: "absolute", top, left }}>
+      <Ionicons name="sparkles" size={size} color="#fff" style={{ opacity }} />
+    </View>
+  );
+}
+
+function HeroBanner({ onLearnMore }) {
+  return (
+    <ClayCard style={{ marginTop: 16, padding: 0, overflow: "hidden", ...CARD_BORDER }}>
       <View
         className="flex-row items-center px-5 py-5"
         style={{ backgroundColor: clay.primarySoft, borderRadius: 24 }}
       >
+        {/* Decorative sparkles */}
+        <Sparkle top={8} left={70} size={10} opacity={0.55} />
+        <Sparkle top={40} left={100} size={7} opacity={0.4} />
+        <Sparkle top={70} left={65} size={6} opacity={0.35} />
+
         <View className="flex-1" style={{ paddingRight: 12 }}>
+          <View
+            className="items-center justify-center rounded-2xl"
+            style={{
+              width: 34,
+              height: 34,
+              backgroundColor: "#fff",
+              marginBottom: 10,
+            }}
+          >
+            <Ionicons name="calendar" size={17} color={clay.primary} />
+          </View>
+
           <Text
             className="text-[15.5px] font-bold"
             style={{ color: clay.primaryDeep }}
@@ -50,6 +80,25 @@ function HeroBanner() {
             Create events, invite your circles and share live location for
             safer meetups.
           </Text>
+
+          <TouchableOpacity
+            className="mt-3 self-start flex-row items-center rounded-full px-3.5 py-2"
+            style={{ backgroundColor: "#fff" }}
+            onPress={onLearnMore}
+          >
+            <Text
+              className="text-[12.5px] font-bold"
+              style={{ color: clay.primaryDeep }}
+            >
+              Learn more
+            </Text>
+            <Ionicons
+              name="chevron-forward"
+              size={14}
+              color={clay.primaryDeep}
+              style={{ marginLeft: 2 }}
+            />
+          </TouchableOpacity>
         </View>
 
         <Image
@@ -123,7 +172,7 @@ function EventCard({ event, onPress }) {
   const statusLabel = STATUS_LABEL[event.status] || "View";
 
   return (
-    <ClayCard style={{ marginTop: 12 }} onPress={onPress}>
+    <ClayCard style={{ marginTop: 12, ...CARD_BORDER }} onPress={onPress}>
       <View className="flex-row items-start">
         <DateBadge event={event} />
 
@@ -209,11 +258,18 @@ const EMPTY_FEATURES = [
 function FeatureCard({ icon, title, subtitle, divider }) {
   return (
     <View
-      className="flex-1 items-center px-2.5 py-4"
-      style={divider ? { borderLeftWidth: 1, borderLeftColor: clay.line } : null}
+      style={{
+        flex: 1,
+        minWidth: 0,
+        alignItems: "center",
+        paddingVertical: 16,
+        paddingHorizontal: 8,
+        borderLeftWidth: divider ? 1 : 0,
+        borderLeftColor: clay.line,
+      }}
     >
       <View
-        className="items-center justify-center rounded-2xl"
+        className="items-center justify-center rounded-full"
         style={{
           width: 40,
           height: 40,
@@ -223,22 +279,27 @@ function FeatureCard({ icon, title, subtitle, divider }) {
         <Ionicons name={icon} size={18} color={clay.primary} />
       </View>
       <Text
-        className="mt-2 text-center text-[12px] font-bold"
-        style={{ color: clay.primaryDeep }}
+        className="mt-2 text-center text-[11.5px] font-bold"
+        style={{ color: clay.primaryDeep, flexShrink: 1 }}
+        numberOfLines={2}
       >
         {title}
       </Text>
-      <Text className="mt-1 text-center text-[11px] font-medium leading-[14px] text-slate-500">
+      <Text
+        className="mt-1 text-center text-[10.5px] font-medium leading-[13px] text-slate-500"
+        style={{ flexShrink: 1 }}
+        numberOfLines={3}
+      >
         {subtitle}
       </Text>
     </View>
   );
 }
 
-function EventsEmptyState() {
+function EventsEmptyState({ onCreatePress }) {
   return (
     <View className="mt-3">
-      <ClayCard>
+      <ClayCard style={CARD_BORDER}>
         <View className="items-center py-2">
           <View
             className="items-center justify-center rounded-2xl"
@@ -252,11 +313,22 @@ function EventsEmptyState() {
           <Text className="mt-1 text-center text-[12.5px] font-medium leading-[17px] text-slate-500">
             Create an event or join one from your circles to see it here.
           </Text>
+
+          <TouchableOpacity
+            className="mt-4 flex-row items-center rounded-full px-4 py-3"
+            style={{ backgroundColor: clay.primary }}
+            onPress={onCreatePress}
+          >
+            <Ionicons name="add" size={16} color="#fff" />
+            <Text className="ml-1.5 text-[13px] font-bold text-white">
+              Create your first event
+            </Text>
+          </TouchableOpacity>
         </View>
       </ClayCard>
 
-      <ClayCard style={{ marginTop: 12, padding: 0 }}>
-        <View className="flex-row">
+      <ClayCard style={{ marginTop: 12, padding: 0, ...CARD_BORDER }}>
+        <View className="flex-row" style={{ alignItems: "stretch" }}>
           {EMPTY_FEATURES.map((f, i) => (
             <FeatureCard key={f.title} {...f} divider={i > 0} />
           ))}
@@ -268,7 +340,7 @@ function EventsEmptyState() {
 
 function CreateEventBanner({ onPress }) {
   return (
-    <ClayCard style={{ marginTop: 32, padding: 0, overflow: "hidden" }} onPress={onPress}>
+    <ClayCard style={{ padding: 0, overflow: "hidden", ...CARD_BORDER }} onPress={onPress}>
       <LinearGradient
         colors={[clay.primary, clay.primaryDeep]}
         start={{ x: 0, y: 0 }}
@@ -296,7 +368,35 @@ function CreateEventBanner({ onPress }) {
             </Text>
           </View>
         </View>
-        <Ionicons name="chevron-forward" size={20} color="#fff" />
+
+        <View className="flex-row items-center" style={{ marginLeft: 8 }}>
+          <View
+            style={{
+              width: 22,
+              height: 1,
+              borderWidth: 1,
+              borderStyle: "dashed",
+              borderColor: "rgba(255,255,255,0.5)",
+              marginRight: 4,
+            }}
+          />
+          <Ionicons
+            name="location"
+            size={14}
+            color="rgba(255,255,255,0.85)"
+            style={{ marginRight: 6 }}
+          />
+          <View
+            className="items-center justify-center rounded-full"
+            style={{
+              width: 30,
+              height: 30,
+              backgroundColor: "rgba(255,255,255,0.18)",
+            }}
+          >
+            <Ionicons name="chevron-forward" size={16} color="#fff" />
+          </View>
+        </View>
       </LinearGradient>
     </ClayCard>
   );
@@ -359,7 +459,9 @@ export default function Events() {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom: 40 }}
         >
-          <HeroBanner />
+          <HeroBanner onLearnMore={() => {
+            // 👉 navigate to learn more / info modal
+          }} />
 
           {loading ? (
             <View className="items-center justify-center py-20">
@@ -385,7 +487,11 @@ export default function Events() {
               </View>
 
               {events.length === 0 ? (
-                <EventsEmptyState />
+                <EventsEmptyState
+                  onCreatePress={() => {
+                    // 👉 navigate to create event
+                  }}
+                />
               ) : (
                 events.map((event) => (
                   <EventCard
@@ -398,11 +504,13 @@ export default function Events() {
                 ))
               )}
 
-              <CreateEventBanner
-                onPress={() => {
-                  // 👉 navigate to create event
-                }}
-              />
+              <View style={{ marginTop: 56 }}>
+                <CreateEventBanner
+                  onPress={() => {
+                    // 👉 navigate to create event
+                  }}
+                />
+              </View>
             </>
           )}
         </ScrollView>
