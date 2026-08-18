@@ -452,7 +452,7 @@ export default function Events() {
             className="flex-row items-center gap-1 rounded-full px-3 py-2"
             style={{ backgroundColor: clay.primary }}
             onPress={() => {
-              // 👉 navigate to create event
+              router.push("/create-event");
             }}
           >
             <Ionicons name="add" size={16} color="#fff" />
@@ -497,7 +497,7 @@ export default function Events() {
               {events.length === 0 ? (
                 <EventsEmptyState
                   onCreatePress={() => {
-                    // 👉 navigate to create event
+                    router.push("/create-event");
                   }}
                 />
               ) : (
@@ -515,7 +515,7 @@ export default function Events() {
               <View style={{ marginTop: 32 }}>
                 <CreateEventBanner
                   onPress={() => {
-                    // 👉 navigate to create event
+                    router.push("/create-event");
                   }}
                 />
               </View>
