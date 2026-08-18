@@ -327,13 +327,22 @@ function EventsEmptyState({ onCreatePress }) {
         </View>
       </ClayCard>
 
-      <ClayCard style={{ marginTop: 12, padding: 0, ...CARD_BORDER }}>
+      <View
+        style={{
+          marginTop: 24,
+          borderWidth: 2.5,
+          borderColor: clay.primary,
+          borderRadius: 22,
+          backgroundColor: "#fff",
+          overflow: "hidden",
+        }}
+      >
         <View className="flex-row" style={{ alignItems: "stretch" }}>
           {EMPTY_FEATURES.map((f, i) => (
             <FeatureCard key={f.title} {...f} divider={i > 0} />
           ))}
         </View>
-      </ClayCard>
+      </View>
     </View>
   );
 }
