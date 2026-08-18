@@ -1,5 +1,7 @@
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  Animated,
+  Easing,
   Keyboard,
   Pressable,
   StatusBar,
@@ -405,6 +407,78 @@ function SectionLabel({ icon, children, right }) {
 }
 
 /* -------------------------------------------------------
+   Floating label input
+------------------------------------------------------- */
+
+function FloatingLabelInput({
+  label,
+  value,
+  onChangeText,
+  returnKeyType,
+  onSubmitEditing,
+}) {
+  const [focused, setFocused] = useState(false);
+  const anim = useRef(new Animated.Value(value ? 1 : 0)).current;
+  const active = focused || (value && value.length > 0);
+
+  useEffect(() => {
+    Animated.timing(anim, {
+      toValue: active ? 1 : 0,
+      duration: 160,
+      easing: Easing.inOut(Easing.ease),
+      useNativeDriver: false,
+    }).start();
+  }, [active, anim]);
+
+  return (
+    <View style={{ position: "relative" }}>
+      <View
+        style={{
+          height: 52,
+          borderWidth: 1,
+          borderColor: active ? "#8B5CF6" : "#E2E8F0",
+          borderRadius: 14,
+          backgroundColor: "#fff",
+          justifyContent: "center",
+          paddingHorizontal: 14,
+        }}
+      >
+        <TextInput
+          value={value}
+          onChangeText={onChangeText}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          returnKeyType={returnKeyType}
+          onSubmitEditing={onSubmitEditing}
+          style={{ flex: 1, fontSize: 15, color: "#1E1B4B", paddingVertical: 0 }}
+        />
+      </View>
+
+      <Animated.Text
+        style={{
+          position: "absolute",
+          left: 10,
+          top: anim.interpolate({
+            inputRange: [0, 1],
+            outputRange: [15, -9],
+          }),
+          fontSize: anim.interpolate({
+            inputRange: [0, 1],
+            outputRange: [15, 11],
+          }),
+          fontWeight: "600",
+          color: active ? "#8B5CF6" : "#94A3B8",
+          backgroundColor: "#fff",
+          paddingHorizontal: 4,
+        }}
+      >
+        {label}
+      </Animated.Text>
+    </View>
+  );
+}
+
+/* -------------------------------------------------------
    Invite row
 ------------------------------------------------------- */
 
@@ -609,26 +683,18 @@ export default function CreateEvent() {
         ) : null}
 
         {/* Event Title Card */}
-        <View className="mb-3 rounded-[24px] bg-white p-4">
-          <Text className="mb-2 text-[14px] font-semibold text-purple-900">
-            Event title
-          </Text>
-          <View className="flex-row items-center rounded-2xl bg-white px-4 py-3 border border-slate-200">
-            <TextInput
-              value={title}
-              onChangeText={setTitle}
-              placeholder="e.g. Sunset picnic at the park"
-              placeholderTextColor="#94A3B8"
-              returnKeyType="next"
-              onSubmitEditing={() => Keyboard.dismiss()}
-              className="flex-1 text-[15px] text-slate-800"
-            />
-            <Ionicons name="sparkles" size={18} color="#8B5CF6" />
-          </View>
+        <View className="mb-3 rounded-[24px] bg-white p-3">
+          <FloatingLabelInput
+            label="Title"
+            value={title}
+            onChangeText={setTitle}
+            returnKeyType="next"
+            onSubmitEditing={() => Keyboard.dismiss()}
+          />
         </View>
 
         {/* Date Card */}
-        <View className="mb-3 rounded-[24px] bg-white p-4">
+        <View className="mb-3 rounded-[24px] bg-white p-3">
           <SectionLabel icon="calendar-outline">Date</SectionLabel>
           <DateScrollPicker
             selectedDate={selectedDate}
@@ -637,7 +703,7 @@ export default function CreateEvent() {
         </View>
 
         {/* Time Card */}
-        <View className="mb-3 rounded-[24px] bg-white p-4">
+        <View className="mb-3 rounded-[24px] bg-white p-3">
           <SectionLabel icon="time-outline">Time</SectionLabel>
           <TimeScrollPicker
             selectedTime={selectedTime}
@@ -646,7 +712,7 @@ export default function CreateEvent() {
         </View>
 
         {/* Location Card */}
-        <View className="mb-3 rounded-[24px] bg-white p-4">
+        <View className="mb-3 rounded-[24px] bg-white p-3">
           <SectionLabel icon="location-outline">
             Location <Text className="text-[13px] font-normal text-slate-400">(optional)</Text>
           </SectionLabel>
@@ -669,7 +735,7 @@ export default function CreateEvent() {
         </View>
 
         {/* Description Card */}
-        <View className="mb-3 rounded-[24px] bg-white p-4">
+        <View className="mb-3 rounded-[24px] bg-white p-3">
           <SectionLabel icon="document-text-outline">
             Description <Text className="text-[13px] font-normal text-slate-400">(optional)</Text>
           </SectionLabel>
