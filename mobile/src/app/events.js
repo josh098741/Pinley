@@ -331,7 +331,7 @@ function EventsEmptyState({ onCreatePress }) {
         style={{
           marginTop: 24,
           borderWidth: 2.5,
-          borderColor: clay.primary,
+          borderColor: "#E6E4ED",
           borderRadius: 22,
           backgroundColor: "#fff",
           overflow: "hidden",
@@ -513,7 +513,7 @@ export default function Events() {
                 ))
               )}
 
-              <View style={{ marginTop: 56 }}>
+              <View style={{ marginTop: 32 }}>
                 <CreateEventBanner
                   onPress={() => {
                     // 👉 navigate to create event
