@@ -2,6 +2,7 @@ import "../global.css";
 import { ClerkProvider } from "@clerk/clerk-expo";
 import { tokenCache } from "@clerk/clerk-expo/token-cache";
 import { Stack } from "expo-router";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import * as WebBrowser from "expo-web-browser";
 import { RequestsProvider } from "../context/RequestsContext";
 import { MapProvider } from "../context/MapContext";
@@ -14,6 +15,7 @@ const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
 export default function RootLayout() {
   return (
     <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
+      <GestureHandlerRootView style={{ flex: 1 }}>
       <RequestsProvider>
         <MapProvider>
           <EventsProvider>
@@ -40,6 +42,7 @@ export default function RootLayout() {
           </EventsProvider>
         </MapProvider>
       </RequestsProvider>
+      </GestureHandlerRootView>
     </ClerkProvider>
   );
 }

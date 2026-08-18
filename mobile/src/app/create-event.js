@@ -2,12 +2,12 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import {
   Keyboard,
   Pressable,
-  ScrollView,
   StatusBar,
   Text,
   TextInput,
   View,
 } from "react-native";
+import { ScrollView } from "react-native-gesture-handler";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -55,9 +55,10 @@ function PickerColumn({ data, selectedIndex, onSelect, renderLabel, keyExtractor
   const listRef = useRef(null);
   const isMounting = useRef(true);
 
-  // Plain ScrollView (not a VirtualizedList) so it can live inside the
-  // screen's ScrollView without breaking windowing. Lists are tiny, so
-  // virtualization is unnecessary here.
+  // Gesture Handler's ScrollView (not RN's), so it can live inside the
+  // screen's ScrollView and still claim its own vertical pan gesture
+  // instead of the outer ScrollView stealing the touch. Lists are tiny,
+  // so virtualization is unnecessary here.
   const scrollToOffset = useCallback((offset, animated) => {
     listRef.current?.scrollTo({ y: offset, animated });
   }, []);
@@ -95,6 +96,9 @@ function PickerColumn({ data, selectedIndex, onSelect, renderLabel, keyExtractor
         showsVerticalScrollIndicator={false}
         snapToInterval={ITEM_HEIGHT}
         decelerationRate="fast"
+        disableIntervalMomentum
+        overScrollMode="never"
+        nestedScrollEnabled
         onMomentumScrollEnd={handleMomentumEnd}
         onLayout={onLayout}
         // Padding so first/last items can centre
@@ -355,14 +359,6 @@ function SectionLabel({ icon, children, right }) {
     </View>
   );
 }
-
-
-
-/* -------------------------------------------------------
-   Time chip
-------------------------------------------------------- */
-
-
 
 /* -------------------------------------------------------
    Invite row
