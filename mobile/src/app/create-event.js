@@ -27,8 +27,9 @@ import { useRequests } from "../context/RequestsContext";
 ------------------------------------------------------- */
 
 const ITEM_HEIGHT = 48;
-const VISIBLE_ITEMS = 5; // odd number so centre row is obvious
+const VISIBLE_ITEMS = 3; // odd number so centre row is obvious
 const PICKER_HEIGHT = ITEM_HEIGHT * VISIBLE_ITEMS;
+const HALF_VISIBLE_ITEMS = Math.floor(VISIBLE_ITEMS / 2); // rows padded above/below centre
 
 const MONTH_NAMES = [
   "January", "February", "March", "April",
@@ -101,10 +102,11 @@ function PickerColumn({ data, selectedIndex, onSelect, renderLabel, keyExtractor
         nestedScrollEnabled
         onMomentumScrollEnd={handleMomentumEnd}
         onLayout={onLayout}
-        // Padding so first/last items can centre
+        // Padding so first/last items can centre — kept in sync with
+        // VISIBLE_ITEMS so the highlight bar always lands on the right row.
         contentContainerStyle={{
-          paddingTop: ITEM_HEIGHT * 2,
-          paddingBottom: ITEM_HEIGHT * 2,
+          paddingTop: ITEM_HEIGHT * HALF_VISIBLE_ITEMS,
+          paddingBottom: ITEM_HEIGHT * HALF_VISIBLE_ITEMS,
         }}
       >
         {data.map((item, index) => {
