@@ -11,8 +11,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { ClayCard, SectionTitle, clay } from "../components/clay";
-import { useEvents } from "../context/EventsContext";
+import { ClayCard, SectionTitle, clay } from "../../../components/clay";
+import { useEvents } from "../../../context/EventsContext";
 
 const CARD_BORDER = {
   borderWidth: 2,
@@ -90,7 +90,7 @@ function HeroBanner({ onLearnMore }) {
         </View>
 
         <Image
-          source={require("../../assets/images/events_calendar.png")}
+          source={require("../../../../assets/images/events_calendar.png")}
           style={{ width: 108, height: 108 }}
           resizeMode="contain"
         />
@@ -392,7 +392,7 @@ function CreateEventBanner({ onPress }) {
             name="location"
             size={14}
             color="rgba(255,255,255,0.85)"
-            style={{ marginRight: 6 }}
+            style={{}}
           />
           <View
             className="items-center justify-center rounded-full"
@@ -452,7 +452,7 @@ export default function Events() {
             className="flex-row items-center gap-1 rounded-full px-3 py-2"
             style={{ backgroundColor: clay.primary }}
             onPress={() => {
-              router.push("/create-event");
+              router.push("/events/create-event");
             }}
           >
             <Ionicons name="add" size={16} color="#fff" />
@@ -497,7 +497,7 @@ export default function Events() {
               {events.length === 0 ? (
                 <EventsEmptyState
                   onCreatePress={() => {
-                    router.push("/create-event");
+                    router.push("/events/create-event");
                   }}
                 />
               ) : (
@@ -515,7 +515,7 @@ export default function Events() {
               <View style={{ marginTop: 32 }}>
                 <CreateEventBanner
                   onPress={() => {
-                    router.push("/create-event");
+                    router.push("/events/create-event");
                   }}
                 />
               </View>

@@ -49,24 +49,44 @@ function GlassBackground() {
 function CustomTabBar({ state, descriptors, navigation }) {
   const insets = useSafeAreaInsets();
   const [rowWidth, setRowWidth] = useState(0);
-  const tabCount = state.routes.length;
+
+  // Only render routes that expose a tab bar icon. Screens registered with
+  // `href: null` (e.g. the create-event flow) are reachable but hidden.
+  const visibleRoutes = state.routes.filter(
+    (route) => typeof descriptors[route.key]?.options?.tabBarIcon === "function"
+  );
+  const tabCount = visibleRoutes.length;
   const tabWidth = rowWidth / tabCount;
+
+  const activeVisibleIndex = visibleRoutes.findIndex(
+    (route) => route.key === state.routes[state.index]?.key
+  );
 
   const translateX = useSharedValue(0);
 
   useEffect(() => {
     if (rowWidth > 0) {
-      translateX.value = withSpring(state.index * tabWidth + INDICATOR_INSET, {
+      const focused = activeVisibleIndex < 0 ? 0 : activeVisibleIndex;
+      translateX.value = withSpring(focused * tabWidth + INDICATOR_INSET, {
         damping: 18,
         stiffness: 180,
         mass: 0.6,
       });
     }
-  }, [state.index, rowWidth]);
+  }, [activeVisibleIndex, rowWidth]);
 
   const indicatorStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: translateX.value }],
   }));
+
+  // Hide the bottom bar on the full-screen events screens.
+  const activeRouteName = state.routeNames?.[state.index];
+  if (
+    activeRouteName === "events/index" ||
+    activeRouteName === "events/create-event"
+  ) {
+    return null;
+  }
 
   return (
     <View style={[styles.tabBarWrapper, { bottom: 24 + insets.bottom }]}>
@@ -88,9 +108,9 @@ function CustomTabBar({ state, descriptors, navigation }) {
               ]}
             />
           )}
-          {state.routes.map((route, index) => {
+          {visibleRoutes.map((route, index) => {
             const { options } = descriptors[route.key];
-            const isFocused = state.index === index;
+            const isFocused = index === activeVisibleIndex;
             const onPress = () => {
               const event = navigation.emit({
                 type: "tabPress",
@@ -173,6 +193,14 @@ export default function TabsLayout() {
               ),
             }}
           />
+          {/* Reachable from the side panel / events flows, but hidden from the tab bar */}
+          <Tabs.Screen
+            name="events/index"
+            options={{
+              href: null,
+              headerShown: false,
+            }}
+          />
           <Tabs.Screen
             name="Profile/profile"
             options={{
@@ -180,6 +208,14 @@ export default function TabsLayout() {
               tabBarIcon: ({ focused }) => (
                 <TabBarIcon icon="person" label="Profile" active={focused} />
               ),
+            }}
+          />
+          {/* Reachable via the Events screen, but hidden from the tab bar */}
+          <Tabs.Screen
+            name="events/create-event"
+            options={{
+              href: null,
+              headerShown: false,
             }}
           />
         </Tabs>
