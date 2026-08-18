@@ -600,17 +600,6 @@ function StepProgress({ step }) {
           }}
         />
       </View>
-
-      <View className="mt-2 flex-row">
-        {STEPS.map((label, i) => (
-          <View key={label} className="flex-1 items-center">
-            <View
-              className="h-2 w-2 rounded-full"
-              style={{ backgroundColor: i <= step ? "#8B5CF6" : "#E2E8F0" }}
-            />
-          </View>
-        ))}
-      </View>
     </View>
   );
 }
