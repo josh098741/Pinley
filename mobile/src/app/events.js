@@ -58,18 +58,6 @@ function HeroBanner({ onLearnMore }) {
         <Sparkle top={70} left={65} size={6} opacity={0.35} />
 
         <View className="flex-1" style={{ paddingRight: 12 }}>
-          <View
-            className="items-center justify-center rounded-2xl"
-            style={{
-              width: 34,
-              height: 34,
-              backgroundColor: "#fff",
-              marginBottom: 10,
-            }}
-          >
-            <Ionicons name="calendar" size={17} color={clay.primary} />
-          </View>
-
           <Text
             className="text-[15.5px] font-bold"
             style={{ color: clay.primaryDeep }}
