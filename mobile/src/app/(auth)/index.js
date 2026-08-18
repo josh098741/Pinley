@@ -48,7 +48,18 @@ export const syncUserToDatabase = async (token) => {
 
   for (const baseUrl of API_URL_CANDIDATES) {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+    let settled = false;
+    // React Native's fetch throws "This request has already been handled" if
+    // abort() is called on a request that already settled.
+    const timeout = setTimeout(() => {
+      if (!settled) {
+        try {
+          controller.abort();
+        } catch {
+          /* already settled */
+        }
+      }
+    }, REQUEST_TIMEOUT_MS);
     try {
       const response = await fetch(`${baseUrl}/api/auth/sync`, {
         method: "POST",
@@ -67,6 +78,7 @@ export const syncUserToDatabase = async (token) => {
     } catch (err) {
       lastError = err;
     } finally {
+      settled = true;
       clearTimeout(timeout);
     }
   }

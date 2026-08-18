@@ -416,6 +416,9 @@ function FloatingLabelInput({
   onChangeText,
   returnKeyType,
   onSubmitEditing,
+  leftAccessory,
+  rightAccessory,
+  inputStyle,
 }) {
   const [focused, setFocused] = useState(false);
   const anim = useRef(new Animated.Value(value ? 1 : 0)).current;
@@ -434,30 +437,38 @@ function FloatingLabelInput({
     <View style={{ position: "relative" }}>
       <View
         style={{
-          height: 52,
+          minHeight: 52,
+          flexDirection: "row",
+          alignItems: "center",
           borderWidth: 1,
           borderColor: active ? "#8B5CF6" : "#E2E8F0",
           borderRadius: 14,
           backgroundColor: "#fff",
-          justifyContent: "center",
           paddingHorizontal: 14,
         }}
       >
-        <TextInput
-          value={value}
-          onChangeText={onChangeText}
-          onFocus={() => setFocused(true)}
-          onBlur={() => setFocused(false)}
-          returnKeyType={returnKeyType}
-          onSubmitEditing={onSubmitEditing}
-          style={{ flex: 1, fontSize: 15, color: "#1E1B4B", paddingVertical: 0 }}
-        />
+        {leftAccessory}
+        <View style={{ flex: 1, minHeight: 52, justifyContent: "center" }}>
+          <TextInput
+            value={value}
+            onChangeText={onChangeText}
+            onFocus={() => setFocused(true)}
+            onBlur={() => setFocused(false)}
+            returnKeyType={returnKeyType}
+            onSubmitEditing={onSubmitEditing}
+            style={[
+              { flex: 1, fontSize: 15, color: "#1E1B4B", paddingVertical: 0 },
+              inputStyle,
+            ]}
+          />
+        </View>
+        {rightAccessory}
       </View>
 
       <Animated.Text
         style={{
           position: "absolute",
-          left: 10,
+          left: leftAccessory ? 38 : 10,
           top: anim.interpolate({
             inputRange: [0, 1],
             outputRange: [15, -9],
@@ -716,22 +727,28 @@ export default function CreateEvent() {
           <SectionLabel icon="location-outline">
             Location <Text className="text-[13px] font-normal text-slate-400">(optional)</Text>
           </SectionLabel>
-          <View className="flex-row items-center rounded-2xl bg-white px-3 py-2 border border-slate-200">
-            <Ionicons name="search-outline" size={18} color="#94A3B8" style={{ marginRight: 8 }} />
-            <TextInput
-              value={location}
-              onChangeText={setLocation}
-              placeholder="Add a place or address"
-              placeholderTextColor="#94A3B8"
-              returnKeyType="next"
-              onSubmitEditing={() => Keyboard.dismiss()}
-              className="flex-1 text-[14px] text-slate-800"
-            />
-            <Pressable className="flex-row items-center rounded-full bg-purple-50 px-3 py-1.5">
-              <Ionicons name="map-outline" size={15} color="#8B5CF6" />
-              <Text className="ml-1 text-[12px] font-semibold text-purple-700">Map</Text>
-            </Pressable>
-          </View>
+          <FloatingLabelInput
+            label="Add a place or address"
+            value={location}
+            onChangeText={setLocation}
+            returnKeyType="next"
+            onSubmitEditing={() => Keyboard.dismiss()}
+            inputStyle={{ fontSize: 14 }}
+            leftAccessory={
+              <Ionicons
+                name="search-outline"
+                size={18}
+                color="#94A3B8"
+                style={{ marginRight: 8 }}
+              />
+            }
+            rightAccessory={
+              <Pressable className="flex-row items-center rounded-full bg-purple-50 px-3 py-1.5">
+                <Ionicons name="map-outline" size={15} color="#8B5CF6" />
+                <Text className="ml-1 text-[12px] font-semibold text-purple-700">Map</Text>
+              </Pressable>
+            }
+          />
         </View>
 
         {/* Description Card */}

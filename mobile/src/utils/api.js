@@ -12,11 +12,24 @@ export const apiRequest = async (
     if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
 
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
-    const onAbort = () => controller.abort();
+    // React Native's fetch throws "This request has already been handled" if
+    // abort() is called on a request that has already settled. Guard every
+    // abort call on the settled flag (and swallow the harmless error) so a
+    // late timeout/abort can't surface as an uncaught rejection.
+    let settled = false;
+    const safeAbort = () => {
+      if (settled) return;
+      try {
+        controller.abort();
+      } catch {
+        /* already settled — nothing to do */
+      }
+    };
+
+    const timeout = setTimeout(() => safeAbort(), REQUEST_TIMEOUT_MS);
+    const onAbort = () => safeAbort();
     signal?.addEventListener("abort", onAbort);
 
-    let settled = false;
     let failsafeTimer;
     // Some React Native fetch implementations ignore signal-driven aborts and can
     // leave the promise pending forever. This races fetch so a bad candidate can
