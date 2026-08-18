@@ -252,10 +252,21 @@ function FeatureCard({ icon, title, subtitle, divider }) {
         alignItems: "center",
         paddingVertical: 16,
         paddingHorizontal: 8,
-        borderLeftWidth: divider ? 1 : 0,
-        borderLeftColor: clay.line,
+        position: "relative",
       }}
     >
+      {divider ? (
+        <View
+          style={{
+            position: "absolute",
+            left: 0,
+            top: 12,
+            bottom: 12,
+            width: 1,
+            backgroundColor: clay.line,
+          }}
+        />
+      ) : null}
       <View
         className="items-center justify-center rounded-full"
         style={{
