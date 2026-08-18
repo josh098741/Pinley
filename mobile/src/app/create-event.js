@@ -419,19 +419,26 @@ function FloatingLabelInput({
   leftAccessory,
   rightAccessory,
   inputStyle,
+  placeholder,
 }) {
   const [focused, setFocused] = useState(false);
-  const anim = useRef(new Animated.Value(value ? 1 : 0)).current;
-  const active = focused || (value && value.length > 0);
+  const hasValue = !!(value && value.length > 0);
+  const showLabel = Boolean(label);
+  const staticLabel = showLabel && Boolean(placeholder);
+  const floated = staticLabel ? true : focused || hasValue;
+  const borderActive = focused || hasValue;
+
+  const anim = useRef(new Animated.Value(floated ? 1 : 0)).current;
 
   useEffect(() => {
+    if (!showLabel) return;
     Animated.timing(anim, {
-      toValue: active ? 1 : 0,
+      toValue: floated ? 1 : 0,
       duration: 160,
       easing: Easing.inOut(Easing.ease),
       useNativeDriver: false,
     }).start();
-  }, [active, anim]);
+  }, [floated, anim, showLabel]);
 
   return (
     <View style={{ position: "relative" }}>
@@ -441,7 +448,7 @@ function FloatingLabelInput({
           flexDirection: "row",
           alignItems: "center",
           borderWidth: 1,
-          borderColor: active ? "#8B5CF6" : "#E2E8F0",
+          borderColor: borderActive ? "#8B5CF6" : "#E2E8F0",
           borderRadius: 14,
           backgroundColor: "#fff",
           paddingHorizontal: 14,
@@ -454,6 +461,8 @@ function FloatingLabelInput({
             onChangeText={onChangeText}
             onFocus={() => setFocused(true)}
             onBlur={() => setFocused(false)}
+            placeholder={placeholder}
+            placeholderTextColor={placeholder ? "#94A3B8" : undefined}
             returnKeyType={returnKeyType}
             onSubmitEditing={onSubmitEditing}
             style={[
@@ -465,26 +474,28 @@ function FloatingLabelInput({
         {rightAccessory}
       </View>
 
-      <Animated.Text
-        style={{
-          position: "absolute",
-          left: leftAccessory ? 38 : 10,
-          top: anim.interpolate({
-            inputRange: [0, 1],
-            outputRange: [15, -9],
-          }),
-          fontSize: anim.interpolate({
-            inputRange: [0, 1],
-            outputRange: [15, 11],
-          }),
-          fontWeight: "600",
-          color: active ? "#8B5CF6" : "#94A3B8",
-          backgroundColor: "#fff",
-          paddingHorizontal: 4,
-        }}
-      >
-        {label}
-      </Animated.Text>
+      {showLabel ? (
+        <Animated.Text
+          style={{
+            position: "absolute",
+            left: leftAccessory ? 44 : 10,
+            top: anim.interpolate({
+              inputRange: [0, 1],
+              outputRange: [15, -9],
+            }),
+            fontSize: anim.interpolate({
+              inputRange: [0, 1],
+              outputRange: [15, 11],
+            }),
+            fontWeight: "600",
+            color: borderActive ? "#8B5CF6" : "#94A3B8",
+            backgroundColor: "#fff",
+            paddingHorizontal: 4,
+          }}
+        >
+          {label}
+        </Animated.Text>
+      ) : null}
     </View>
   );
 }
@@ -695,12 +706,25 @@ export default function CreateEvent() {
 
         {/* Event Title Card */}
         <View className="mb-3 rounded-[24px] bg-white p-3">
+          <SectionLabel icon="text">Event title</SectionLabel>
           <FloatingLabelInput
-            label="Title"
+            label="Add an event title"
             value={title}
             onChangeText={setTitle}
             returnKeyType="next"
             onSubmitEditing={() => Keyboard.dismiss()}
+            leftAccessory={
+              <Text
+                style={{
+                  marginRight: 14,
+                  fontSize: 16,
+                  fontWeight: "700",
+                  color: "#94A3B8",
+                }}
+              >
+                Aa
+              </Text>
+            }
           />
         </View>
 
