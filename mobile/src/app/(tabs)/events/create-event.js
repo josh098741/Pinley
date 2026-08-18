@@ -420,6 +420,9 @@ function FloatingLabelInput({
   rightAccessory,
   inputStyle,
   placeholder,
+  multiline,
+  numberOfLines,
+  minHeight,
 }) {
   const [focused, setFocused] = useState(false);
   const hasValue = !!(value && value.length > 0);
@@ -427,6 +430,8 @@ function FloatingLabelInput({
   const staticLabel = showLabel && Boolean(placeholder);
   const floated = staticLabel ? true : focused || hasValue;
   const borderActive = focused || hasValue;
+
+  const boxMinHeight = minHeight ?? 52;
 
   const anim = useRef(new Animated.Value(floated ? 1 : 0)).current;
 
@@ -444,18 +449,25 @@ function FloatingLabelInput({
     <View style={{ position: "relative" }}>
       <View
         style={{
-          minHeight: 52,
+          minHeight: boxMinHeight,
           flexDirection: "row",
-          alignItems: "center",
+          alignItems: multiline ? "flex-start" : "center",
           borderWidth: 1,
           borderColor: borderActive ? "#8B5CF6" : "#E2E8F0",
           borderRadius: 14,
           backgroundColor: "#fff",
           paddingHorizontal: 14,
+          paddingVertical: multiline ? 14 : 0,
         }}
       >
         {leftAccessory}
-        <View style={{ flex: 1, minHeight: 52, justifyContent: "center" }}>
+        <View
+          style={{
+            flex: 1,
+            minHeight: boxMinHeight,
+            justifyContent: multiline ? "flex-start" : "center",
+          }}
+        >
           <TextInput
             value={value}
             onChangeText={onChangeText}
@@ -465,6 +477,9 @@ function FloatingLabelInput({
             placeholderTextColor={placeholder ? "#94A3B8" : undefined}
             returnKeyType={returnKeyType}
             onSubmitEditing={onSubmitEditing}
+            multiline={multiline}
+            numberOfLines={numberOfLines}
+            textAlignVertical={multiline ? "top" : undefined}
             style={[
               { flex: 1, fontSize: 15, color: "#1E1B4B", paddingVertical: 0 },
               inputStyle,
@@ -553,8 +568,257 @@ function InviteRow({ user, selected, onToggle }) {
 }
 
 /* -------------------------------------------------------
-   Main screen
+   Wizard steps
 ------------------------------------------------------- */
+
+const STEPS = ["Details", "Date & time", "Location", "Invite", "Review"];
+
+function StepProgress({ step }) {
+  const total = STEPS.length;
+  const fraction = (step + 1) / total;
+
+  return (
+    <View className="px-5 pt-1 pb-3">
+      <View className="mb-2 flex-row items-center justify-between">
+        <Text className="text-[13px] font-bold text-purple-700">
+          {STEPS[step]}
+        </Text>
+        <Text className="text-[12px] font-semibold text-slate-400">
+          Step {step + 1} of {total}
+        </Text>
+      </View>
+
+      <View
+        className="h-1.5 w-full overflow-hidden rounded-full"
+        style={{ backgroundColor: "#EDE9FE" }}
+      >
+        <View
+          className="h-full rounded-full"
+          style={{
+            width: `${fraction * 100}%`,
+            backgroundColor: "#8B5CF6",
+          }}
+        />
+      </View>
+
+      <View className="mt-2 flex-row">
+        {STEPS.map((label, i) => (
+          <View key={label} className="flex-1 items-center">
+            <View
+              className="h-2 w-2 rounded-full"
+              style={{ backgroundColor: i <= step ? "#8B5CF6" : "#E2E8F0" }}
+            />
+          </View>
+        ))}
+      </View>
+    </View>
+  );
+}
+
+function DetailsStep({ title, setTitle, description, setDescription }) {
+  return (
+    <View>
+      <View className="mb-3 rounded-[24px] bg-white p-4">
+        <SectionLabel icon="text">Event title</SectionLabel>
+        <FloatingLabelInput
+          label="Add an event title"
+          value={title}
+          onChangeText={setTitle}
+          returnKeyType="next"
+          onSubmitEditing={() => Keyboard.dismiss()}
+          leftAccessory={
+            <Text
+              style={{
+                marginRight: 14,
+                fontSize: 16,
+                fontWeight: "700",
+                color: "#94A3B8",
+              }}
+            >
+              Aa
+            </Text>
+          }
+        />
+      </View>
+
+      <View className="mb-3 rounded-[24px] bg-white p-4">
+        <SectionLabel icon="document-text-outline">
+          Description <Text className="text-[13px] font-normal text-slate-400">(optional)</Text>
+        </SectionLabel>
+        <FloatingLabelInput
+          label="Add a description"
+          value={description}
+          onChangeText={(text) => {
+            if (text.length <= 300) {
+              setDescription(text);
+            }
+          }}
+          multiline
+          numberOfLines={4}
+          minHeight={96}
+          inputStyle={{ fontSize: 14, lineHeight: 20 }}
+        />
+        <Text className="mt-1 text-right text-[11px] font-medium text-slate-400">
+          {description.length}/300
+        </Text>
+      </View>
+    </View>
+  );
+}
+
+function DateTimeStep({ selectedDate, setSelectedDate, selectedTime, setSelectedTime }) {
+  return (
+    <View>
+      <View className="mb-3 rounded-[24px] bg-white p-4">
+        <SectionLabel icon="calendar-outline">Date</SectionLabel>
+        <DateScrollPicker
+          selectedDate={selectedDate}
+          onDateChange={(date) => setSelectedDate(date)}
+        />
+      </View>
+
+      <View className="mb-3 rounded-[24px] bg-white p-4">
+        <SectionLabel icon="time-outline">Time</SectionLabel>
+        <TimeScrollPicker
+          selectedTime={selectedTime}
+          onTimeChange={(t) => setSelectedTime(t)}
+        />
+      </View>
+    </View>
+  );
+}
+
+function LocationStep({ location, setLocation }) {
+  return (
+    <View className="mb-3 rounded-[24px] bg-white p-4">
+      <SectionLabel icon="location-outline">
+        Location <Text className="text-[13px] font-normal text-slate-400">(optional)</Text>
+      </SectionLabel>
+      <Text className="mb-3 text-[12.5px] leading-[17px] text-slate-500">
+        Add a place so your circles know where to meet. You can skip this and
+        add it later.
+      </Text>
+      <FloatingLabelInput
+        label="Add a place or address"
+        value={location}
+        onChangeText={setLocation}
+        returnKeyType="next"
+        onSubmitEditing={() => Keyboard.dismiss()}
+        inputStyle={{ fontSize: 14 }}
+        leftAccessory={
+          <Ionicons
+            name="search-outline"
+            size={18}
+            color="#94A3B8"
+            style={{ marginRight: 8 }}
+          />
+        }
+        rightAccessory={
+          <Pressable className="flex-row items-center rounded-full bg-purple-50 px-3 py-1.5">
+            <Ionicons name="map-outline" size={15} color="#8B5CF6" />
+            <Text className="ml-1 text-[12px] font-semibold text-purple-700">Map</Text>
+          </Pressable>
+        }
+      />
+    </View>
+  );
+}
+
+function InviteStep({ inviteList, invitees, toggleInvitee }) {
+  return (
+    <View className="rounded-[24px] bg-white p-4">
+      <SectionLabel icon="people-outline">
+        Invite your circles <Text className="text-[13px] font-normal text-slate-400">(optional)</Text>
+      </SectionLabel>
+
+      {inviteList.length === 0 ? (
+        <Text className="text-[13px] text-slate-400">
+          No connections yet — you can invite people after creating the event.
+        </Text>
+      ) : (
+        <View>
+          {inviteList.map((user, index) => (
+            <View
+              key={user._id}
+              style={index > 0 ? { borderTopWidth: 1, borderTopColor: "#F1F5F9" } : undefined}
+            >
+              <InviteRow
+                user={user}
+                selected={invitees.has(user._id)}
+                onToggle={() => toggleInvitee(user._id)}
+              />
+            </View>
+          ))}
+        </View>
+      )}
+    </View>
+  );
+}
+
+function ReviewStep({ title, description, location, selectedDate, selectedTime, invitedUsers }) {
+  const dateLabel = selectedDate
+    ? selectedDate.toLocaleDateString(undefined, {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      })
+    : "—";
+  const timeLabel = selectedTime
+    ? selectedTime.toLocaleTimeString(undefined, {
+        hour: "numeric",
+        minute: "2-digit",
+      })
+    : "—";
+
+  return (
+    <View>
+      <View className="mb-3 rounded-[24px] bg-white p-4">
+        <Text className="text-[12.5px] font-bold uppercase tracking-wide text-purple-700">
+          {dateLabel} · {timeLabel}
+        </Text>
+        <Text className="mt-1 text-[20px] font-bold text-slate-900">
+          {title || "Untitled event"}
+        </Text>
+        {description ? (
+          <Text className="mt-1.5 text-[13.5px] leading-[19px] text-slate-500">
+            {description}
+          </Text>
+        ) : null}
+        {location ? (
+          <View className="mt-3 flex-row items-center" style={{ gap: 6 }}>
+            <Ionicons name="location-outline" size={15} color="#8B5CF6" />
+            <Text className="text-[13px] font-medium text-slate-600">
+              {location}
+            </Text>
+          </View>
+        ) : null}
+      </View>
+
+      <View className="mb-3 rounded-[24px] bg-white p-4">
+        <Text className="mb-1 text-[15px] font-semibold text-slate-800">
+          Invited friends
+        </Text>
+        {invitedUsers.length === 0 ? (
+          <Text className="text-[13px] text-slate-400">
+            No one invited yet — you can add people later.
+          </Text>
+        ) : (
+          <View>
+            {invitedUsers.map((user, index) => (
+              <View
+                key={user._id}
+                style={index > 0 ? { borderTopWidth: 1, borderTopColor: "#F1F5F9" } : undefined}
+              >
+                <InviteRow user={user} selected={true} onToggle={() => {}} />
+              </View>
+            ))}
+          </View>
+        )}
+      </View>
+    </View>
+  );
+}
 
 export default function CreateEvent() {
   const router = useRouter();
@@ -562,6 +826,7 @@ export default function CreateEvent() {
   const { createEvent } = useEvents();
   const { connections } = useRequests();
 
+  const [step, setStep] = useState(0);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [location, setLocation] = useState("");
@@ -583,8 +848,9 @@ export default function CreateEvent() {
     [connections]
   );
 
-  const canSubmit =
-    Boolean(title.trim() && selectedDate) && !submitting;
+  const isLastStep = step === STEPS.length - 1;
+  const canSubmit = Boolean(title.trim() && selectedDate) && !submitting;
+  const invitedUsers = inviteList.filter((u) => invitees.has(u._id));
 
   const toggleInvitee = (id) => {
     setInvitees((prev) => {
@@ -598,6 +864,38 @@ export default function CreateEvent() {
 
       return next;
     });
+  };
+
+  const validateStep = () => {
+    if (step === 0 && !title.trim()) {
+      setError("Add a title for your event.");
+      return false;
+    }
+    if (step === 1 && !selectedDate) {
+      setError("Pick a date for your event.");
+      return false;
+    }
+    return true;
+  };
+
+  const goBack = () => {
+    if (step === 0) {
+      router.back();
+    } else {
+      setError("");
+      setStep((s) => s - 1);
+    }
+  };
+
+  const goNext = () => {
+    if (!validateStep()) return;
+    setError("");
+
+    if (isLastStep) {
+      handleSubmit();
+    } else {
+      setStep((s) => s + 1);
+    }
   };
 
   const handleSubmit = async () => {
@@ -661,9 +959,9 @@ export default function CreateEvent() {
       />
 
       {/* Header */}
-      <View className="flex-row items-center justify-between px-4 py-3">
+      <View className="flex-row items-center justify-between px-4 pt-3 pb-1">
         <Pressable
-          onPress={() => router.back()}
+          onPress={goBack}
           className="h-10 w-10 items-center justify-center rounded-full bg-white"
           style={{
             borderWidth: 1,
@@ -685,18 +983,20 @@ export default function CreateEvent() {
         <View className="w-10" />
       </View>
 
+      <StepProgress step={step} />
+
       <ScrollView
         className="flex-1"
         contentContainerStyle={{
           paddingHorizontal: 16,
           paddingTop: 8,
-          paddingBottom: 24,
+          paddingBottom: 16,
         }}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
         {error ? (
-          <View className="mb-4 flex-row items-center rounded-2xl bg-rose-50 px-4 py-3 border border-rose-200">
+          <View className="mb-4 flex-row items-center rounded-2xl border border-rose-200" style={{ backgroundColor: "#FEF2F2", paddingHorizontal: 16, paddingVertical: 12 }}>
             <Ionicons name="alert-circle" size={18} color="#E11D48" />
             <Text className="ml-2 flex-1 text-[13px] font-semibold text-rose-600">
               {error}
@@ -704,153 +1004,72 @@ export default function CreateEvent() {
           </View>
         ) : null}
 
-        {/* Event Title Card */}
-        <View className="mb-3 rounded-[24px] bg-white p-3">
-          <SectionLabel icon="text">Event title</SectionLabel>
-          <FloatingLabelInput
-            label="Add an event title"
-            value={title}
-            onChangeText={setTitle}
-            returnKeyType="next"
-            onSubmitEditing={() => Keyboard.dismiss()}
-            leftAccessory={
-              <Text
-                style={{
-                  marginRight: 14,
-                  fontSize: 16,
-                  fontWeight: "700",
-                  color: "#94A3B8",
-                }}
-              >
-                Aa
-              </Text>
-            }
+        {step === 0 ? (
+          <DetailsStep
+            title={title}
+            setTitle={setTitle}
+            description={description}
+            setDescription={setDescription}
           />
-        </View>
+        ) : null}
 
-        {/* Date Card */}
-        <View className="mb-3 rounded-[24px] bg-white p-3">
-          <SectionLabel icon="calendar-outline">Date</SectionLabel>
-          <DateScrollPicker
+        {step === 1 ? (
+          <DateTimeStep
             selectedDate={selectedDate}
-            onDateChange={(date) => setSelectedDate(date)}
-          />
-        </View>
-
-        {/* Time Card */}
-        <View className="mb-3 rounded-[24px] bg-white p-3">
-          <SectionLabel icon="time-outline">Time</SectionLabel>
-          <TimeScrollPicker
+            setSelectedDate={setSelectedDate}
             selectedTime={selectedTime}
-            onTimeChange={(t) => setSelectedTime(t)}
+            setSelectedTime={setSelectedTime}
           />
-        </View>
+        ) : null}
 
-        {/* Location Card */}
-        <View className="mb-3 rounded-[24px] bg-white p-3">
-          <SectionLabel icon="location-outline">
-            Location <Text className="text-[13px] font-normal text-slate-400">(optional)</Text>
-          </SectionLabel>
-          <FloatingLabelInput
-            label="Add a place or address"
-            value={location}
-            onChangeText={setLocation}
-            returnKeyType="next"
-            onSubmitEditing={() => Keyboard.dismiss()}
-            inputStyle={{ fontSize: 14 }}
-            leftAccessory={
-              <Ionicons
-                name="search-outline"
-                size={18}
-                color="#94A3B8"
-                style={{ marginRight: 8 }}
-              />
-            }
-            rightAccessory={
-              <Pressable className="flex-row items-center rounded-full bg-purple-50 px-3 py-1.5">
-                <Ionicons name="map-outline" size={15} color="#8B5CF6" />
-                <Text className="ml-1 text-[12px] font-semibold text-purple-700">Map</Text>
-              </Pressable>
-            }
+        {step === 2 ? (
+          <LocationStep location={location} setLocation={setLocation} />
+        ) : null}
+
+        {step === 3 ? (
+          <InviteStep
+            inviteList={inviteList}
+            invitees={invitees}
+            toggleInvitee={toggleInvitee}
           />
-        </View>
+        ) : null}
 
-        {/* Description Card */}
-        <View className="mb-3 rounded-[24px] bg-white p-3">
-          <SectionLabel icon="document-text-outline">
-            Description <Text className="text-[13px] font-normal text-slate-400">(optional)</Text>
-          </SectionLabel>
-          <View className="rounded-2xl bg-white p-3 border border-slate-200">
-            <TextInput
-              value={description}
-              onChangeText={(text) => {
-                if (text.length <= 300) {
-                  setDescription(text);
-                }
-              }}
-              placeholder="What's this event about?"
-              placeholderTextColor="#94A3B8"
-              multiline
-              numberOfLines={3}
-              maxLength={300}
-              textAlignVertical="top"
-              className="min-h-[70px] text-[14px] text-slate-800"
-            />
-            <Text className="mt-1 text-right text-[11px] font-medium text-slate-400">
-              {description.length}/300
-            </Text>
-          </View>
-        </View>
+        {step === 4 ? (
+          <ReviewStep
+            title={title}
+            description={description}
+            location={location}
+            selectedDate={selectedDate}
+            selectedTime={selectedTime}
+            invitedUsers={invitedUsers}
+          />
+        ) : null}
+      </ScrollView>
 
-        {/* Invite Circles Card */}
-        <View className="mb-4 rounded-[24px] bg-white p-4">
-          <View className="flex-row items-center justify-between">
-            <SectionLabel icon="people-outline">
-              Invite your circles <Text className="text-[13px] font-normal text-slate-400">(optional)</Text>
-            </SectionLabel>
-            {inviteList.length === 0 ? (
-              <Ionicons name="chevron-forward" size={18} color="#8B5CF6" />
-            ) : null}
-          </View>
-
-          {inviteList.length === 0 ? (
-            <Text className="text-[13px] text-slate-400">
-              No connections yet — you can invite people after creating the event.
-            </Text>
-          ) : (
-            <View>
-              {inviteList.map((user, index) => (
-                <View
-                  key={user._id}
-                  style={index > 0 ? { borderTopWidth: 1, borderTopColor: "#F1F5F9" } : undefined}
-                >
-                  <InviteRow
-                    user={user}
-                    selected={invitees.has(user._id)}
-                    onToggle={() => toggleInvitee(user._id)}
-                  />
-                </View>
-              ))}
-            </View>
-          )}
-        </View>
-
-        {/* Create Event Button */}
+      {/* Footer action */}
+      <View
+        className="px-4 pb-4 pt-2"
+        style={{ backgroundColor: "#FAF8FF" }}
+      >
         <Pressable
-          onPress={handleSubmit}
-          disabled={!canSubmit}
+          onPress={goNext}
+          disabled={isLastStep && !canSubmit}
           className="flex-row items-center justify-center rounded-full py-4"
           style={{
-            backgroundColor: canSubmit ? "#8B5CF6" : "#A78BFA",
-            opacity: canSubmit ? 1 : 0.7,
+            backgroundColor: isLastStep && !canSubmit ? "#A78BFA" : "#8B5CF6",
+            opacity: isLastStep && !canSubmit ? 0.7 : 1,
           }}
         >
-          <Ionicons name="checkmark" size={20} color="#FFFFFF" style={{ marginRight: 6 }} />
+          {isLastStep ? (
+            <Ionicons name="checkmark" size={20} color="#FFFFFF" style={{ marginRight: 6 }} />
+          ) : (
+            <Ionicons name="arrow-forward" size={20} color="#FFFFFF" style={{ marginRight: 6 }} />
+          )}
           <Text className="text-[16px] font-bold text-white">
-            {submitting ? "Creating…" : "Create event"}
+            {isLastStep ? (submitting ? "Creating…" : "Create event") : "Continue"}
           </Text>
         </Pressable>
-      </ScrollView>
+      </View>
     </SafeAreaView>
   );
 }
