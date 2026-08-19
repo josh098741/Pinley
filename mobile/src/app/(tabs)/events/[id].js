@@ -141,23 +141,14 @@ function HeroCard({ event, statusLabel, tone }) {
   const host = event?.host;
 
   return (
-    <ClayCard style={[CARD_BORDER, { overflow: "hidden", padding: 0 }]}>
+    <ClayCard style={[CARD_BORDER, { overflow: "hidden", padding: 0, minHeight: 210, position: "relative" }]}>
+      {/* Background Image */}
       {event?.coverImageUrl ? (
-        <View style={{ height: 160, width: "100%" }}>
+        <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}>
           <Image
             source={{ uri: event.coverImageUrl }}
             style={{ width: "100%", height: "100%" }}
             resizeMode="cover"
-          />
-          <LinearGradient
-            colors={["transparent", "rgba(124,58,237,0.55)"]}
-            style={{
-              position: "absolute",
-              bottom: 0,
-              left: 0,
-              right: 0,
-              height: 80,
-            }}
           />
         </View>
       ) : (
@@ -165,20 +156,54 @@ function HeroCard({ event, statusLabel, tone }) {
           colors={[clay.primarySoft, "#DDD6FE"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          style={{ height: 100, width: "100%" }}
+          style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
         />
       )}
 
+      {/* Gradient Overlays for Text Readability */}
+      <LinearGradient
+        colors={["#ffffff", "rgba(255,255,255,0.9)", "rgba(255,255,255,0.5)", "transparent"]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, width: "85%" }}
+      />
+      <LinearGradient
+        colors={["#ffffff", "rgba(255,255,255,0.9)", "transparent"]}
+        start={{ x: 0, y: 1 }}
+        end={{ x: 0, y: 0 }}
+        style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, height: "100%" }}
+      />
+
+      {/* Content */}
       <View
         style={{
-          backgroundColor: clay.primarySoft,
-          paddingHorizontal: 18,
-          paddingTop: 14,
-          paddingBottom: 16,
+          paddingHorizontal: 20,
+          paddingTop: 20,
+          paddingBottom: 20,
+          flex: 1,
+          justifyContent: "space-between",
         }}
       >
         <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-          <ClayChip label={statusLabel} tone={tone} />
+          {/* Status Chip */}
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              backgroundColor: clay.primarySoft,
+              borderRadius: 999,
+              paddingHorizontal: 12,
+              paddingVertical: 6,
+              gap: 6,
+            }}
+          >
+            <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: clay.primaryDeep }} />
+            <Text style={{ fontSize: 13, fontWeight: "700", color: clay.primaryDeep }}>
+              {statusLabel}
+            </Text>
+          </View>
+
+          {/* Host Badge */}
           {event?.isHost ? (
             <View
               style={{
@@ -186,47 +211,55 @@ function HeroCard({ event, statusLabel, tone }) {
                 alignItems: "center",
                 borderRadius: 999,
                 backgroundColor: "#fff",
-                paddingHorizontal: 10,
-                paddingVertical: 4,
-                gap: 4,
+                paddingHorizontal: 12,
+                paddingVertical: 6,
+                gap: 5,
+                shadowColor: clay.primaryDeep,
+                shadowOpacity: 0.1,
+                shadowRadius: 4,
+                shadowOffset: { width: 0, height: 2 },
+                elevation: 2,
               }}
             >
-              <Ionicons name="star" size={12} color={clay.warning} />
-              <Text style={{ fontSize: 11.5, fontWeight: "700", color: clay.warning }}>Host</Text>
+              <Ionicons name="star" size={14} color={clay.warning} />
+              <Text style={{ fontSize: 13, fontWeight: "800", color: clay.warning }}>Host</Text>
             </View>
           ) : null}
         </View>
 
-        <Text
-          style={{
-            marginTop: 10,
-            fontSize: 22,
-            fontWeight: "800",
-            color: "#0F0C29",
-            letterSpacing: -0.3,
-            lineHeight: 28,
-          }}
-        >
-          {event?.title}
-        </Text>
+        <View style={{ marginTop: 28 }}>
+          <Text
+            style={{
+              fontSize: 28,
+              fontWeight: "900",
+              color: "#0F0C29",
+              letterSpacing: -0.5,
+              lineHeight: 34,
+              maxWidth: "80%",
+            }}
+          >
+            {event?.title}
+          </Text>
 
-        <View style={{ marginTop: 12, flexDirection: "row", alignItems: "center", gap: 10 }}>
-          <Avatar name={displayName(host)} uri={host?.imageUrl} size={34} />
-          <View style={{ flex: 1 }}>
+          <View style={{ marginTop: 16 }}>
             <Text
               style={{
-                fontSize: 11,
-                fontWeight: "600",
-                color: "#94A3B8",
+                fontSize: 12,
+                fontWeight: "700",
+                color: clay.primary,
                 textTransform: "uppercase",
                 letterSpacing: 0.6,
+                marginBottom: 6,
               }}
             >
               Hosted by
             </Text>
-            <Text style={{ marginTop: 2, fontSize: 13.5, fontWeight: "700", color: "#1E1B4B" }}>
-              {displayName(host)}
-            </Text>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+              <Avatar name={displayName(host)} uri={host?.imageUrl} size={36} />
+              <Text style={{ fontSize: 14.5, fontWeight: "800", color: "#0F0C29" }}>
+                {displayName(host)}
+              </Text>
+            </View>
           </View>
         </View>
       </View>
