@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useFocusEffect } from "@react-navigation/native";
 import {
   Animated,
   Easing,
@@ -832,6 +833,36 @@ export default function CreateEvent() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
+  // Bumped to force-remount the steps (esp. the date/time pickers, which
+  // keep their own internal state) so their values clear on reset.
+  const [formKey, setFormKey] = useState(0);
+
+  const resetForm = useCallback(() => {
+    setStep(0);
+    setTitle("");
+    setDescription("");
+    setLocation("");
+    setSelectedDate(null);
+    setSelectedTime(() => {
+      const d = new Date();
+      d.setMinutes(Math.round(d.getMinutes() / 5) * 5, 0, 0);
+      return d;
+    });
+    setInvitees(new Set());
+    setSubmitting(false);
+    setError("");
+    setFormKey((k) => k + 1);
+  }, []);
+
+  // The screen stays mounted in the navigator, so its state is preserved
+  // between visits. Reset the form each time it gains focus so a fresh
+  // "create" never shows a previous event's details.
+  useFocusEffect(
+    useCallback(() => {
+      resetForm();
+    }, [resetForm])
+  );
+
   const inviteList = useMemo(
     () => connections || [],
     [connections]
@@ -993,46 +1024,48 @@ export default function CreateEvent() {
           </View>
         ) : null}
 
-        {step === 0 ? (
-          <DetailsStep
-            title={title}
-            setTitle={setTitle}
-            description={description}
-            setDescription={setDescription}
-          />
-        ) : null}
+        <View key={formKey}>
+          {step === 0 ? (
+            <DetailsStep
+              title={title}
+              setTitle={setTitle}
+              description={description}
+              setDescription={setDescription}
+            />
+          ) : null}
 
-        {step === 1 ? (
-          <DateTimeStep
-            selectedDate={selectedDate}
-            setSelectedDate={setSelectedDate}
-            selectedTime={selectedTime}
-            setSelectedTime={setSelectedTime}
-          />
-        ) : null}
+          {step === 1 ? (
+            <DateTimeStep
+              selectedDate={selectedDate}
+              setSelectedDate={setSelectedDate}
+              selectedTime={selectedTime}
+              setSelectedTime={setSelectedTime}
+            />
+          ) : null}
 
-        {step === 2 ? (
-          <LocationStep location={location} setLocation={setLocation} />
-        ) : null}
+          {step === 2 ? (
+            <LocationStep location={location} setLocation={setLocation} />
+          ) : null}
 
-        {step === 3 ? (
-          <InviteStep
-            inviteList={inviteList}
-            invitees={invitees}
-            toggleInvitee={toggleInvitee}
-          />
-        ) : null}
+          {step === 3 ? (
+            <InviteStep
+              inviteList={inviteList}
+              invitees={invitees}
+              toggleInvitee={toggleInvitee}
+            />
+          ) : null}
 
-        {step === 4 ? (
-          <ReviewStep
-            title={title}
-            description={description}
-            location={location}
-            selectedDate={selectedDate}
-            selectedTime={selectedTime}
-            invitedUsers={invitedUsers}
-          />
-        ) : null}
+          {step === 4 ? (
+            <ReviewStep
+              title={title}
+              description={description}
+              location={location}
+              selectedDate={selectedDate}
+              selectedTime={selectedTime}
+              invitedUsers={invitedUsers}
+            />
+          ) : null}
+        </View>
       </ScrollView>
 
       {/* Footer action */}
