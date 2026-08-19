@@ -141,62 +141,73 @@ function HeroCard({ event, statusLabel, tone }) {
   const host = event?.host;
 
   return (
-    <ClayCard style={[CARD_BORDER, { overflow: "hidden", padding: 0, minHeight: 210, position: "relative" }]}>
-      {/* Background Image */}
-      {event?.coverImageUrl ? (
-        <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}>
+    <ClayCard style={[CARD_BORDER, { overflow: "hidden", padding: 0, minHeight: 210, position: "relative", borderRadius: 28 }]}>
+      {/* Background layers (clipped to rounded corners) */}
+      <View
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          borderRadius: 28,
+          overflow: "hidden",
+        }}
+      >
+        {/* Background Image / Gradient */}
+        {event?.coverImageUrl ? (
           <Image
             source={{ uri: event.coverImageUrl }}
             style={{ width: "100%", height: "100%" }}
             resizeMode="cover"
           />
-        </View>
-      ) : (
+        ) : (
+          <LinearGradient
+            colors={[clay.primarySoft, "#DDD6FE"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
+          />
+        )}
+
+        {/* White readability overlay */}
         <LinearGradient
-          colors={[clay.primarySoft, "#DDD6FE"]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
+          colors={[
+            "rgba(255,255,255,1)",
+            "rgba(255,255,255,0.98)",
+            "rgba(255,255,255,0.92)",
+            "rgba(255,255,255,0.70)",
+            "rgba(255,255,255,0.35)",
+            "rgba(255,255,255,0.08)",
+            "transparent",
+          ]}
+          locations={[0, 0.2, 0.38, 0.52, 0.66, 0.78, 1]}
+          start={{ x: 0, y: 0.5 }}
+          end={{ x: 1, y: 0.5 }}
           style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
         />
-      )}
 
-      {/* White readability overlay */}
-      <LinearGradient
-        colors={[
-          "rgba(255,255,255,1)",
-          "rgba(255,255,255,0.98)",
-          "rgba(255,255,255,0.92)",
-          "rgba(255,255,255,0.70)",
-          "rgba(255,255,255,0.35)",
-          "rgba(255,255,255,0.08)",
-          "transparent",
-        ]}
-        locations={[0, 0.2, 0.38, 0.52, 0.66, 0.78, 1]}
-        start={{ x: 0, y: 0.5 }}
-        end={{ x: 1, y: 0.5 }}
-        style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
-      />
-
-      {/* Soft white hue / glow */}
-      <LinearGradient
-        colors={[
-          "rgba(255,255,255,0)",
-          "rgba(255,255,255,0.35)",
-          "rgba(255,255,255,0.65)",
-          "rgba(255,255,255,0.25)",
-          "transparent",
-        ]}
-        locations={[0, 0.25, 0.5, 0.75, 1]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        style={{
-          position: "absolute",
-          top: 0,
-          bottom: 0,
-          left: "28%",
-          width: "45%",
-        }}
-      />
+        {/* Soft white hue / glow */}
+        <LinearGradient
+          colors={[
+            "rgba(255,255,255,0)",
+            "rgba(255,255,255,0.35)",
+            "rgba(255,255,255,0.65)",
+            "rgba(255,255,255,0.25)",
+            "transparent",
+          ]}
+          locations={[0, 0.25, 0.5, 0.75, 1]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={{
+            position: "absolute",
+            top: 0,
+            bottom: 0,
+            left: "28%",
+            width: "45%",
+          }}
+        />
+      </View>
 
       {/* Content */}
       <View
