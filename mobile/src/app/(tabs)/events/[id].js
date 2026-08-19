@@ -2,15 +2,19 @@ import { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Image,
   Pressable,
   ScrollView,
+  Share,
   StatusBar,
   Text,
+  TouchableOpacity,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 
 import {
   Avatar,
@@ -39,8 +43,8 @@ const TONE_BY_STATUS = {
 };
 
 const STATUS_LABEL = {
-  going: "You're going",
-  attending: "You're going",
+  going: "Going",
+  attending: "Going",
   pending: "Pending",
   maybe: "Maybe",
   invited: "Invited",
@@ -48,27 +52,7 @@ const STATUS_LABEL = {
   none: "Not going",
 };
 
-function Header({ onBack }) {
-  return (
-    <View className="flex-row items-center justify-between px-4 pt-3 pb-1">
-      <PressableRow onPress={onBack}>
-        <View
-          className="h-10 w-10 items-center justify-center rounded-full bg-white"
-          style={{
-            borderWidth: 1,
-            borderColor: clay.primaryBorder,
-          }}
-        >
-          <Ionicons name="chevron-back" size={20} color={clay.ink} />
-        </View>
-      </PressableRow>
-
-      <Text className="text-[20px] font-bold text-slate-900">Event</Text>
-
-      <View className="w-10" />
-    </View>
-  );
-}
+/* ─── small helpers ──────────────────────────────────────────── */
 
 function PressableRow({ onPress, children }) {
   return (
@@ -78,24 +62,214 @@ function PressableRow({ onPress, children }) {
   );
 }
 
-function InfoRow({ icon, label, value }) {
+/* ─── Header ─────────────────────────────────────────────────── */
+
+function Header({ onBack, onShare }) {
   return (
-    <View className="flex-row items-center py-3" style={{ gap: 12 }}>
+    <View
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        paddingHorizontal: 16,
+        paddingTop: 12,
+        paddingBottom: 6,
+      }}
+    >
+      <PressableRow onPress={onBack}>
+        <View
+          style={{
+            width: 40,
+            height: 40,
+            borderRadius: 20,
+            backgroundColor: "#fff",
+            alignItems: "center",
+            justifyContent: "center",
+            borderWidth: 1,
+            borderColor: clay.primaryBorder,
+          }}
+        >
+          <Ionicons name="chevron-back" size={20} color={clay.ink} />
+        </View>
+      </PressableRow>
+
+      <Text style={{ fontSize: 20, fontWeight: "700", color: "#0F0C29" }}>
+        Event
+      </Text>
+
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+        <PressableRow onPress={onShare}>
+          <View
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: 18,
+              backgroundColor: "#fff",
+              alignItems: "center",
+              justifyContent: "center",
+              borderWidth: 1,
+              borderColor: clay.primaryBorder,
+            }}
+          >
+            <Ionicons name="share-social-outline" size={18} color={clay.ink} />
+          </View>
+        </PressableRow>
+        <PressableRow onPress={() => {}}>
+          <View
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: 18,
+              backgroundColor: "#fff",
+              alignItems: "center",
+              justifyContent: "center",
+              borderWidth: 1,
+              borderColor: clay.primaryBorder,
+            }}
+          >
+            <Ionicons name="ellipsis-horizontal" size={18} color={clay.ink} />
+          </View>
+        </PressableRow>
+      </View>
+    </View>
+  );
+}
+
+/* ─── Hero card ──────────────────────────────────────────────── */
+
+function HeroCard({ event, statusLabel, tone }) {
+  const host = event?.host;
+
+  return (
+    <ClayCard style={[CARD_BORDER, { overflow: "hidden", padding: 0 }]}>
+      {event?.coverImageUrl ? (
+        <View style={{ height: 160, width: "100%" }}>
+          <Image
+            source={{ uri: event.coverImageUrl }}
+            style={{ width: "100%", height: "100%" }}
+            resizeMode="cover"
+          />
+          <LinearGradient
+            colors={["transparent", "rgba(124,58,237,0.55)"]}
+            style={{
+              position: "absolute",
+              bottom: 0,
+              left: 0,
+              right: 0,
+              height: 80,
+            }}
+          />
+        </View>
+      ) : (
+        <LinearGradient
+          colors={[clay.primarySoft, "#DDD6FE"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={{ height: 100, width: "100%" }}
+        />
+      )}
+
       <View
-        className="items-center justify-center rounded-2xl"
         style={{
-          width: 42,
-          height: 42,
           backgroundColor: clay.primarySoft,
+          paddingHorizontal: 18,
+          paddingTop: 14,
+          paddingBottom: 16,
         }}
       >
-        <Ionicons name={icon} size={19} color={clay.primary} />
+        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+          <ClayChip label={statusLabel} tone={tone} />
+          {event?.isHost ? (
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                borderRadius: 999,
+                backgroundColor: "#fff",
+                paddingHorizontal: 10,
+                paddingVertical: 4,
+                gap: 4,
+              }}
+            >
+              <Ionicons name="star" size={12} color={clay.warning} />
+              <Text style={{ fontSize: 11.5, fontWeight: "700", color: clay.warning }}>Host</Text>
+            </View>
+          ) : null}
+        </View>
+
+        <Text
+          style={{
+            marginTop: 10,
+            fontSize: 22,
+            fontWeight: "800",
+            color: "#0F0C29",
+            letterSpacing: -0.3,
+            lineHeight: 28,
+          }}
+        >
+          {event?.title}
+        </Text>
+
+        <View style={{ marginTop: 12, flexDirection: "row", alignItems: "center", gap: 10 }}>
+          <Avatar name={displayName(host)} uri={host?.imageUrl} size={34} />
+          <View style={{ flex: 1 }}>
+            <Text
+              style={{
+                fontSize: 11,
+                fontWeight: "600",
+                color: "#94A3B8",
+                textTransform: "uppercase",
+                letterSpacing: 0.6,
+              }}
+            >
+              Hosted by
+            </Text>
+            <Text style={{ marginTop: 2, fontSize: 13.5, fontWeight: "700", color: "#1E1B4B" }}>
+              {displayName(host)}
+            </Text>
+          </View>
+        </View>
       </View>
-      <View className="flex-1">
-        <Text className="text-[12px] font-semibold uppercase tracking-wide text-slate-400">
+    </ClayCard>
+  );
+}
+
+/* ─── Separator ──────────────────────────────────────────────── */
+
+function Separator() {
+  return <View style={{ height: 1, backgroundColor: clay.line, marginVertical: 2 }} />;
+}
+
+/* ─── Info row ───────────────────────────────────────────────── */
+
+function InfoRow({ icon, label, value }) {
+  return (
+    <View style={{ flexDirection: "row", alignItems: "center", paddingVertical: 9, gap: 10 }}>
+      <View
+        style={{
+          width: 36,
+          height: 36,
+          borderRadius: 12,
+          backgroundColor: clay.primarySoft,
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <Ionicons name={icon} size={17} color={clay.primary} />
+      </View>
+      <View style={{ flex: 1 }}>
+        <Text
+          style={{
+            fontSize: 11,
+            fontWeight: "600",
+            color: clay.primary,
+            textTransform: "uppercase",
+            letterSpacing: 0.5,
+          }}
+        >
           {label}
         </Text>
-        <Text className="mt-0.5 text-[14.5px] font-bold text-slate-900">
+        <Text style={{ marginTop: 2, fontSize: 14, fontWeight: "700", color: "#0F0C29" }}>
           {value}
         </Text>
       </View>
@@ -103,43 +277,359 @@ function InfoRow({ icon, label, value }) {
   );
 }
 
-function SectionCard({ title, icon, children }) {
+/* ─── Info + Map card ────────────────────────────────────────── */
+
+function InfoMapCard({ dateParts, event }) {
   return (
-    <ClayCard style={{ marginTop: 14, padding: 18, ...CARD_BORDER }}>
-      <View className="mb-1 flex-row items-center" style={{ gap: 8 }}>
-        <Ionicons name={icon} size={17} color={clay.primary} />
-        <Text className="text-[15px] font-bold text-slate-900">{title}</Text>
+    <ClayCard style={[CARD_BORDER, { marginTop: 14, padding: 0, overflow: "hidden" }]}>
+      <View style={{ flexDirection: "row" }}>
+        <View style={{ flex: 1, paddingHorizontal: 14, paddingVertical: 12 }}>
+          {dateParts ? (
+            <>
+              <InfoRow icon="calendar-outline" label="Date" value={`${dateParts.weekday}, ${dateParts.date}`} />
+              <Separator />
+              <InfoRow icon="time-outline" label="Time" value={dateParts.time} />
+              {event?.location ? <Separator /> : null}
+            </>
+          ) : null}
+          {event?.location ? (
+            <InfoRow icon="location-outline" label="Location" value={event.location} />
+          ) : null}
+        </View>
+
+        <View
+          style={{
+            width: 112,
+            borderLeftWidth: 1,
+            borderLeftColor: clay.line,
+          }}
+        >
+          <View
+            style={{
+              flex: 1,
+              backgroundColor: "#EDE9FE",
+              alignItems: "center",
+              justifyContent: "center",
+              minHeight: 90,
+            }}
+          >
+            {[0.25, 0.5, 0.75].map((f) => (
+              <View
+                key={`h${f}`}
+                style={{
+                  position: "absolute",
+                  left: 0,
+                  right: 0,
+                  top: `${f * 100}%`,
+                  height: 1,
+                  backgroundColor: "rgba(124,58,237,0.12)",
+                }}
+              />
+            ))}
+            {[0.33, 0.66].map((f) => (
+              <View
+                key={`v${f}`}
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  bottom: 0,
+                  left: `${f * 100}%`,
+                  width: 1,
+                  backgroundColor: "rgba(124,58,237,0.12)",
+                }}
+              />
+            ))}
+            <Ionicons name="location" size={28} color={clay.primary} />
+          </View>
+
+          <TouchableOpacity
+            onPress={() => Alert.alert("Open map", "Map view is coming soon.")}
+            style={{
+              padding: 8,
+              alignItems: "center",
+              borderTopWidth: 1,
+              borderTopColor: clay.line,
+              flexDirection: "row",
+              justifyContent: "center",
+              gap: 4,
+            }}
+          >
+            <Ionicons name="map-outline" size={13} color={clay.primary} />
+            <Text style={{ fontSize: 11.5, fontWeight: "700", color: clay.primaryDeep }}>
+              View on map
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
-      <View style={{ marginTop: 6 }}>{children}</View>
     </ClayCard>
   );
 }
 
-function AttendeeRow({ user }) {
+/* ─── About card ─────────────────────────────────────────────── */
+
+function AboutCard({ description }) {
   return (
-    <View
-      className="flex-row items-center py-2.5"
-      style={{ borderTopWidth: 1, borderTopColor: clay.line }}
-    >
-      <Avatar name={displayName(user)} uri={user.imageUrl} size={38} />
-      <View className="ml-3 flex-1">
-        <Text className="text-[14px] font-semibold text-slate-900">
-          {displayName(user)}
-        </Text>
-        <Text className="mt-0.5 text-[12px] font-medium text-slate-500">
-          {user.username || user.email}
+    <ClayCard style={[CARD_BORDER, { marginTop: 14 }]}>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 8 }}>
+        <View
+          style={{
+            width: 32,
+            height: 32,
+            borderRadius: 10,
+            backgroundColor: clay.primarySoft,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Ionicons name="document-text-outline" size={15} color={clay.primary} />
+        </View>
+        <Text
+          style={{
+            fontSize: 12,
+            fontWeight: "700",
+            color: clay.primary,
+            textTransform: "uppercase",
+            letterSpacing: 0.5,
+          }}
+        >
+          About
         </Text>
       </View>
+      <Text style={{ fontSize: 14, fontWeight: "500", color: "#475569", lineHeight: 21 }}>
+        {description}
+      </Text>
+    </ClayCard>
+  );
+}
+
+/* ─── Going card ─────────────────────────────────────────────── */
+
+function GoingCard({ attendees }) {
+  return (
+    <ClayCard style={[CARD_BORDER, { marginTop: 14 }]}>
+      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+          <View
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: 12,
+              backgroundColor: clay.primarySoft,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Ionicons name="people-outline" size={17} color={clay.primary} />
+          </View>
+          <Text style={{ fontSize: 15, fontWeight: "700", color: "#0F0C29" }}>
+            Going ({attendees.length})
+          </Text>
+        </View>
+        <Ionicons name="chevron-forward" size={18} color={clay.muted} />
+      </View>
+    </ClayCard>
+  );
+}
+
+/* ─── Person section ─────────────────────────────────────────── */
+
+function PersonSection({ label, users }) {
+  return (
+    <View style={{ marginTop: 20 }}>
+      <Text
+        style={{
+          fontSize: 12,
+          fontWeight: "700",
+          color: clay.primary,
+          textTransform: "uppercase",
+          letterSpacing: 0.8,
+          marginBottom: 10,
+          paddingHorizontal: 2,
+        }}
+      >
+        {label}
+      </Text>
+      {users.map((user) => (
+        <UserCard key={user._id || user.id} user={user} />
+      ))}
     </View>
   );
 }
+
+function UserCard({ user }) {
+  return (
+    <View
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        backgroundColor: "#fff",
+        borderRadius: 18,
+        borderWidth: 1,
+        borderColor: clay.primaryBorder,
+        padding: 12,
+        marginBottom: 8,
+        shadowColor: clay.primaryDeep,
+        shadowOpacity: 0.06,
+        shadowRadius: 8,
+        shadowOffset: { width: 0, height: 3 },
+        elevation: 2,
+      }}
+    >
+      <Avatar name={displayName(user)} uri={user.imageUrl} size={44} />
+      <View style={{ flex: 1, marginLeft: 12 }}>
+        <Text style={{ fontSize: 14.5, fontWeight: "700", color: "#0F0C29" }}>
+          {displayName(user)}
+        </Text>
+        <Text style={{ marginTop: 2, fontSize: 12, fontWeight: "500", color: clay.muted }}>
+          {user.email || user.username || ""}
+        </Text>
+      </View>
+      <TouchableOpacity
+        style={{
+          width: 38,
+          height: 38,
+          borderRadius: 19,
+          borderWidth: 2,
+          borderColor: clay.primaryBorder,
+          backgroundColor: clay.primarySoft,
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+        onPress={() => Alert.alert("Message", "Messaging is coming soon.")}
+      >
+        <Ionicons name="chatbubble-outline" size={17} color={clay.primary} />
+      </TouchableOpacity>
+    </View>
+  );
+}
+
+/* ─── Bottom bar ─────────────────────────────────────────────── */
+
+function BottomBar({ isHost, deleting, onDelete, onChangeResponse }) {
+  if (isHost) {
+    return (
+      <View
+        style={{
+          paddingHorizontal: 16,
+          paddingVertical: 14,
+          borderTopWidth: 1,
+          borderTopColor: clay.line,
+          backgroundColor: clay.bg,
+        }}
+      >
+        <TouchableOpacity
+          onPress={onDelete}
+          disabled={deleting}
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "center",
+            borderRadius: 999,
+            paddingVertical: 15,
+            borderWidth: 1.5,
+            borderColor: clay.danger,
+            backgroundColor: clay.dangerSoft,
+            opacity: deleting ? 0.6 : 1,
+          }}
+        >
+          <Ionicons name="trash-outline" size={18} color={clay.danger} style={{ marginRight: 8 }} />
+          <Text style={{ fontSize: 15, fontWeight: "700", color: clay.danger }}>
+            {deleting ? "Deleting…" : "Delete event"}
+          </Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  return (
+    <View
+      style={{
+        paddingHorizontal: 16,
+        paddingVertical: 14,
+        borderTopWidth: 1,
+        borderTopColor: clay.line,
+        backgroundColor: clay.bg,
+      }}
+    >
+      <TouchableOpacity onPress={onChangeResponse}>
+        <LinearGradient
+          colors={[clay.primary, clay.primaryDeep]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "center",
+            borderRadius: 999,
+            paddingVertical: 15,
+            gap: 8,
+          }}
+        >
+          <Ionicons name="checkmark-circle-outline" size={20} color="#fff" />
+          <Text style={{ fontSize: 16, fontWeight: "700", color: "#fff" }}>
+            Change response
+          </Text>
+        </LinearGradient>
+      </TouchableOpacity>
+    </View>
+  );
+}
+
+/* ─── Main screen ────────────────────────────────────────────── */
 
 export default function EventDetail() {
   const router = useRouter();
   const { id } = useLocalSearchParams();
   const { getEvent, deleteEvent } = useEvents();
 
+  const [event, setEvent] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [deleting, setDeleting] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    setDeleting(false);
+
+    const load = async () => {
+      setLoading(true);
+      setError("");
+      try {
+        const data = await getEvent(id);
+        if (!active) return;
+        if (!data) setError("Event not found.");
+        else setEvent(data);
+      } catch (err) {
+        if (!active) return;
+        setError(err?.message || "Could not load this event.");
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+
+    load();
+    return () => { active = false; };
+  }, [id, getEvent]);
+
+  const dateParts = useMemo(() => {
+    if (!event?.date) return null;
+    const d = new Date(event.date);
+    if (isNaN(d.getTime())) return null;
+    return {
+      weekday: d.toLocaleDateString(undefined, { weekday: "long" }),
+      date: d.toLocaleDateString(undefined, {
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+      }),
+      time: d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" }),
+    };
+  }, [event]);
+
+  const tone = event ? TONE_BY_STATUS[event.status] || "muted" : "muted";
+  const statusLabel = event ? STATUS_LABEL[event.status] || "View" : "View";
+  const attendees = event?.attendees || [];
+  const pending = event?.pendingInvites || [];
 
   const handleDelete = () => {
     if (deleting) return;
@@ -158,10 +648,7 @@ export default function EventDetail() {
               router.replace("/events");
             } catch (err) {
               setDeleting(false);
-              Alert.alert(
-                "Could not delete",
-                err?.message || "Please try again."
-              );
+              Alert.alert("Could not delete", err?.message || "Please try again.");
             }
           },
         },
@@ -169,284 +656,128 @@ export default function EventDetail() {
     );
   };
 
-  const [event, setEvent] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const handleShare = async () => {
+    try {
+      await Share.share({ message: `Check out this event: ${event?.title || ""}` });
+    } catch (_) {}
+  };
 
-  useEffect(() => {
-    let active = true;
-
-    // The screen instance is reused when navigating between events, so reset
-    // the transient delete state whenever the event id changes.
-    setDeleting(false);
-
-    const load = async () => {
-      setLoading(true);
-      setError("");
-      try {
-        const data = await getEvent(id);
-        if (!active) return;
-        if (!data) {
-          setError("Event not found.");
-        } else {
-          setEvent(data);
-        }
-      } catch (err) {
-        if (!active) return;
-        setError(err?.message || "Could not load this event.");
-      } finally {
-        if (active) setLoading(false);
-      }
-    };
-
-    load();
-    return () => {
-      active = false;
-    };
-  }, [id, getEvent]);
-
-  const dateParts = useMemo(() => {
-    if (!event?.date) return null;
-    const d = new Date(event.date);
-    if (isNaN(d.getTime())) return null;
-    return {
-      weekday: d.toLocaleDateString(undefined, { weekday: "long" }),
-      date: d.toLocaleDateString(undefined, {
-        month: "long",
-        day: "numeric",
-        year: "numeric",
-      }),
-      time: d.toLocaleTimeString(undefined, {
-        hour: "numeric",
-        minute: "2-digit",
-      }),
-    };
-  }, [event]);
-
-  const tone = event ? TONE_BY_STATUS[event.status] || "muted" : "muted";
-  const statusLabel = event
-    ? STATUS_LABEL[event.status] || "View"
-    : "View";
-
-  const attendees = event?.attendees || [];
-  const pending = event?.pendingInvites || [];
+  const handleChangeResponse = () => {
+    Alert.alert(
+      "Change response",
+      "How would you like to respond?",
+      [
+        { text: "Going", onPress: () => {} },
+        { text: "Not going", onPress: () => {} },
+        { text: "Cancel", style: "cancel" },
+      ]
+    );
+  };
 
   return (
-    <SafeAreaView className="flex-1" style={{ backgroundColor: clay.bg }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: clay.bg }}>
       <StatusBar barStyle="dark-content" backgroundColor={clay.bg} />
 
-      <Header onBack={() => router.back()} />
+      <Header onBack={() => router.back()} onShare={handleShare} />
 
       {loading ? (
-        <View className="flex-1 items-center justify-center py-24">
+        <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
           <ActivityIndicator color={clay.primary} size="large" />
-          <Text className="mt-3 text-[13px] font-medium text-slate-400">
+          <Text style={{ marginTop: 12, fontSize: 13, fontWeight: "500", color: clay.muted }}>
             Loading event…
           </Text>
         </View>
       ) : error ? (
-        <View className="flex-1 items-center justify-center px-8 py-24">
+        <View
+          style={{
+            flex: 1,
+            alignItems: "center",
+            justifyContent: "center",
+            paddingHorizontal: 32,
+          }}
+        >
           <View
-            className="items-center justify-center rounded-2xl"
             style={{
               width: 56,
               height: 56,
+              borderRadius: 20,
               backgroundColor: clay.dangerSoft,
+              alignItems: "center",
+              justifyContent: "center",
             }}
           >
             <Ionicons name="alert-circle" size={26} color={clay.danger} />
           </View>
-          <Text className="mt-3 text-center text-[14.5px] font-bold text-slate-900">
+          <Text
+            style={{
+              marginTop: 12,
+              textAlign: "center",
+              fontSize: 14.5,
+              fontWeight: "700",
+              color: "#0F0C29",
+            }}
+          >
             {error}
           </Text>
-          <View className="mt-4">
-            <ClayButton
-              label="Go back"
-              variant="soft"
-              onPress={() => router.back()}
-            />
+          <View style={{ marginTop: 16 }}>
+            <ClayButton label="Go back" variant="soft" onPress={() => router.back()} />
           </View>
         </View>
       ) : (
-        <ScrollView
-          className="flex-1"
-          contentContainerStyle={{
-            paddingHorizontal: 16,
-            paddingTop: 8,
-            paddingBottom: 24,
-          }}
-          showsVerticalScrollIndicator={false}
-        >
-          {/* Hero */}
-          <ClayCard
-            style={[CARD_BORDER, { overflow: "hidden", padding: 0 }]}
+        <>
+          <ScrollView
+            style={{ flex: 1 }}
+            contentContainerStyle={{
+              paddingHorizontal: 16,
+              paddingTop: 4,
+              paddingBottom: 32,
+            }}
+            showsVerticalScrollIndicator={false}
           >
+            {/* Hero card */}
+            <HeroCard event={event} statusLabel={statusLabel} tone={tone} />
+
+            {/* Date / Time / Location + Map */}
+            <InfoMapCard dateParts={dateParts} event={event} />
+
+            {/* About */}
+            {event?.description ? <AboutCard description={event.description} /> : null}
+
+            {/* Going */}
+            <GoingCard attendees={attendees} />
+
+            {/* Divider */}
             <View
-              className="px-5 pt-5 pb-4"
               style={{
-                backgroundColor: clay.primarySoft,
-                borderTopLeftRadius: 22,
-                borderTopRightRadius: 22,
+                height: 1,
+                backgroundColor: clay.line,
+                marginTop: 22,
+                marginHorizontal: 4,
               }}
-            >
-              <View className="flex-row items-center justify-between">
-                <ClayChip label={statusLabel} tone={tone} />
-                {event?.isHost ? (
-                  <View
-                    className="flex-row items-center rounded-full px-2.5 py-1"
-                    style={{ backgroundColor: "#fff", gap: 4 }}
-                  >
-                    <Ionicons
-                      name="star"
-                      size={12}
-                      color={clay.warning}
-                    />
-                    <Text
-                      className="text-[11.5px] font-bold"
-                      style={{ color: clay.warning }}
-                    >
-                      Host
-                    </Text>
-                  </View>
-                ) : null}
-              </View>
+            />
 
-              <Text
-                className="mt-3 text-[22px] font-extrabold leading-7 text-slate-900"
-                style={{ letterSpacing: -0.3 }}
-              >
-                {event?.title}
-              </Text>
+            {/* Host section */}
+            {event?.host ? (
+              <PersonSection label="Host" users={[event.host]} />
+            ) : null}
 
-              <View className="mt-3 flex-row items-center" style={{ gap: 10 }}>
-                <Avatar
-                  name={displayName(event?.host)}
-                  uri={event?.host?.imageUrl}
-                  size={34}
-                />
-                <View className="flex-1">
-                  <Text className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
-                    Hosted by
-                  </Text>
-                  <Text className="mt-0.5 text-[13.5px] font-bold text-slate-800">
-                    {displayName(event?.host)}
-                  </Text>
-                </View>
-              </View>
-            </View>
-          </ClayCard>
+            {/* Invited / pending section */}
+            {pending.length > 0 ? (
+              <PersonSection
+                label={`Invited (${pending.length})`}
+                users={pending}
+              />
+            ) : null}
+          </ScrollView>
 
-          {/* Date & time */}
-          {dateParts ? (
-            <SectionCard title="Date & time" icon="calendar-outline">
-              <View style={{ paddingTop: 4 }}>
-                <InfoRow
-                  icon="calendar"
-                  label="Date"
-                  value={`${dateParts.weekday}, ${dateParts.date}`}
-                />
-                <InfoRow
-                  icon="time-outline"
-                  label="Time"
-                  value={dateParts.time}
-                />
-              </View>
-            </SectionCard>
-          ) : null}
-
-          {/* Location */}
-          {event?.location ? (
-            <SectionCard title="Location" icon="location-outline">
-              <View className="flex-row items-center" style={{ gap: 10 }}>
-                <Ionicons name="location" size={18} color={clay.primary} />
-                <Text className="flex-1 text-[14px] font-medium leading-5 text-slate-700">
-                  {event.location}
-                </Text>
-              </View>
-              <PressableRow
-                onPress={() =>
-                  Alert.alert("Open map", "Map view is coming soon.")
-                }
-              >
-                <View
-                  className="mt-3 flex-row items-center self-start rounded-full px-3 py-1.5"
-                  style={{ backgroundColor: clay.primarySoft, gap: 5 }}
-                >
-                  <Ionicons name="map-outline" size={14} color={clay.primary} />
-                  <Text className="text-[12px] font-bold" style={{ color: clay.primaryDeep }}>
-                    View on map
-                  </Text>
-                </View>
-              </PressableRow>
-            </SectionCard>
-          ) : null}
-
-          {/* Description */}
-          {event?.description ? (
-            <SectionCard title="About" icon="document-text-outline">
-              <Text className="text-[14px] font-medium leading-[21px] text-slate-600">
-                {event.description}
-              </Text>
-            </SectionCard>
-          ) : null}
-
-          {/* Attendees */}
-          <SectionCard
-            title={`Going (${attendees.length})`}
-            icon="people-outline"
-          >
-            {attendees.length === 0 ? (
-              <Text className="py-2 text-[13px] font-medium text-slate-400">
-                No one has joined yet.
-              </Text>
-            ) : (
-              attendees.map((user) => (
-                <AttendeeRow key={user._id} user={user} />
-              ))
-            )}
-          </SectionCard>
-
-          {/* Pending invites */}
-          {pending.length > 0 ? (
-            <SectionCard
-              title={`Invited (${pending.length})`}
-              icon="mail-outline"
-            >
-              {pending.map((user) => (
-                <AttendeeRow key={user._id} user={user} />
-              ))}
-            </SectionCard>
-          ) : null}
-
-          {/* Host actions */}
-          {event?.isHost ? (
-            <PressableRow onPress={handleDelete}>
-              <View
-                className="mt-4 flex-row items-center justify-center rounded-full py-3.5"
-                style={{
-                  borderWidth: 1.5,
-                  borderColor: clay.danger,
-                  backgroundColor: clay.dangerSoft,
-                  opacity: deleting ? 0.6 : 1,
-                }}
-              >
-                <Ionicons
-                  name="trash-outline"
-                  size={18}
-                  color={clay.danger}
-                  style={{ marginRight: 8 }}
-                />
-                <Text
-                  className="text-[15px] font-bold"
-                  style={{ color: clay.danger }}
-                >
-                  {deleting ? "Deleting…" : "Delete event"}
-                </Text>
-              </View>
-            </PressableRow>
-          ) : null}
-
-        </ScrollView>
+          {/* Bottom action bar */}
+          <BottomBar
+            isHost={event?.isHost}
+            deleting={deleting}
+            onDelete={handleDelete}
+            onChangeResponse={handleChangeResponse}
+          />
+        </>
       )}
     </SafeAreaView>
   );
