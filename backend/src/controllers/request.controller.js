@@ -1,10 +1,12 @@
 import User from "../models/user.models.js"
 import Request from "../models/request.models.js"
 import Connection from "../models/connection.models.js"
+import Event from "../models/event.models.js"
 import { emitToUser } from "../utils/realtime.js"
 import { normalizePinCode } from "../utils/pincode.js"
 
 const USER_SELECT = "firstName lastName email username imageUrl pinCode"
+const EVENT_SELECT = "title date location host"
 
 const getCurrentUser = async (req) => {
   const clerkUserId = req.auth?.sub || req.auth?.userId
@@ -32,9 +34,11 @@ export const getRequests = async (req, res) => {
     const [incoming, outgoing] = await Promise.all([
       Request.find({ recipient: me._id, status: "pending" })
         .populate("sender", USER_SELECT)
+        .populate("event", EVENT_SELECT)
         .sort({ createdAt: -1 }),
       Request.find({ sender: me._id, status: "pending" })
         .populate("recipient", USER_SELECT)
+        .populate("event", EVENT_SELECT)
         .sort({ createdAt: -1 }),
     ])
 
@@ -44,6 +48,7 @@ export const getRequests = async (req, res) => {
     })
       .populate("sender", USER_SELECT)
       .populate("recipient", USER_SELECT)
+      .populate("event", EVENT_SELECT)
       .sort({ updatedAt: -1 })
       .limit(20)
 
@@ -138,7 +143,28 @@ export const respondToRequest = async (req, res) => {
     await request.save()
 
     if (action === "accept") {
-      await createConnection(me._id, request.sender)
+      if (request.type === "event" && request.event) {
+        // Accepting an event invite adds the user to the event's attendees.
+        const ev = await Event.findById(request.event)
+        if (ev) {
+          ev.attendees = [
+            ...new Set([
+              ...(ev.attendees || []).map(String),
+              String(me._id),
+            ]),
+          ]
+          ev.pendingInvites = (ev.pendingInvites || []).filter(
+            (id) => String(id) !== String(me._id)
+          )
+          await ev.save()
+          emitToUser(request.sender, "event:inviteAccepted", {
+            eventId: String(ev._id),
+            userId: String(me._id),
+          })
+        }
+      } else {
+        await createConnection(me._id, request.sender)
+      }
     }
 
     const populated = await Request.findById(request._id)
@@ -146,6 +172,14 @@ export const respondToRequest = async (req, res) => {
       .populate("recipient", USER_SELECT)
 
     emitToUser(request.sender, action === "accept" ? "request:accepted" : "request:declined", populated)
+
+    if (action === "accept" && request.type === "event") {
+      // Notify the accepter so their Events tab refreshes (they're now an attendee).
+      emitToUser(me._id, "event:joined", {
+        eventId: request.event ? String(request.event) : null,
+        requestId: String(request._id),
+      })
+    }
 
     return res.status(200).json({ request: populated })
   } catch (error) {

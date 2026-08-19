@@ -14,6 +14,17 @@ const requestSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
+    type: {
+      type: String,
+      enum: ["connection", "event"],
+      default: "connection",
+      index: true,
+    },
+    event: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Event",
+      default: null,
+    },
     status: {
       type: String,
       enum: ["pending", "accepted", "declined", "cancelled"],

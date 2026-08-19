@@ -917,7 +917,7 @@ export default function CreateEvent() {
         description: description.trim(),
         location: location.trim(),
         date: date.toISOString(),
-        attendeeIds: [...invitees],
+        inviteeIds: [...invitees],
       });
 
       if (!created) {

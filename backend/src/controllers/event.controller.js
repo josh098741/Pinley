@@ -1,5 +1,7 @@
 import User from "../models/user.models.js"
 import Event from "../models/event.models.js"
+import Request from "../models/request.models.js"
+import { emitToUser } from "../utils/realtime.js"
 
 const USER_SELECT = "firstName lastName email username imageUrl pinCode lastKnownLocation"
 
@@ -38,7 +40,21 @@ function serializeEvent(event, meId) {
       : "Unknown"
 
   const isHost = String(host?._id || host) === meId
-  const status = event.status === "cancelled" ? "cancelled" : "going"
+
+  const inAttendees = (event.attendees || []).some(
+    (a) => String(a) === meId
+  )
+  const inPending = (event.pendingInvites || []).some(
+    (a) => String(a) === meId
+  )
+
+  const myStatus = event.status === "cancelled"
+    ? "cancelled"
+    : inAttendees
+    ? "going"
+    : inPending
+    ? "invited"
+    : "none"
 
   return {
     id: String(event._id),
@@ -48,11 +64,13 @@ function serializeEvent(event, meId) {
     host: hostName,
     isHost,
     attendees: event.attendees ? event.attendees.length : 0,
+    pendingCount: event.pendingInvites ? event.pendingInvites.length : 0,
+    myStatus,
     date: event.date.toISOString(),
     dateLabel: formatDateLabel(event.date),
     time: formatTime(event.date),
     location: event.location,
-    status,
+    status: myStatus,
   }
 }
 
@@ -79,13 +97,60 @@ export const getEvents = async (req, res) => {
   }
 }
 
+const EVENT_SELECT = "title date location"
+const REQUEST_SELECT = "firstName lastName email username imageUrl pinCode"
+
+// Sends an event invitation (a `type: "event"` request) to one user.
+// Returns the created/populated request, or null if it should be skipped.
+const sendEventInvite = async (event, fromUser, toUser) => {
+  // Never invite the host, an existing attendee, or someone already pending.
+  const isHost = String(event.host) === String(toUser._id)
+  const alreadyIn = (event.attendees || []).some(
+    (a) => String(a) === String(toUser._id)
+  )
+  const alreadyPending = (event.pendingInvites || []).some(
+    (a) => String(a) === String(toUser._id)
+  )
+  if (isHost || alreadyIn || alreadyPending) return null
+
+  const existing = await Request.findOne({
+    type: "event",
+    event: event._id,
+    sender: fromUser._id,
+    recipient: toUser._id,
+    status: "pending",
+  })
+  if (existing) return null
+
+  const created = await Request.create({
+    sender: fromUser._id,
+    recipient: toUser._id,
+    type: "event",
+    event: event._id,
+  })
+
+  event.pendingInvites = [...new Set([
+    ...(event.pendingInvites || []).map(String),
+    String(toUser._id),
+  ])]
+
+  const populated = await Request.findById(created._id)
+    .populate("sender", REQUEST_SELECT)
+    .populate("recipient", REQUEST_SELECT)
+    .populate("event", EVENT_SELECT)
+
+  emitToUser(toUser._id, "request:new", populated)
+
+  return populated
+}
+
 export const createEvent = async (req, res) => {
   try {
     const clerkUserId = req.auth?.sub || req.auth?.userId
     const me = await User.findOne({ clerkUserId })
     if (!me) return res.status(404).json({ message: "User not found" })
 
-    const { title, description, location, date, attendeeIds } = req.body || {}
+    const { title, description, location, date, inviteeIds } = req.body || {}
 
     if (!title || typeof title !== "string" || !title.trim()) {
       return res.status(400).json({ message: "Event title is required" })
@@ -94,33 +159,75 @@ export const createEvent = async (req, res) => {
       return res.status(400).json({ message: "A valid event date is required" })
     }
 
-    const attendees = [me._id]
-    if (Array.isArray(attendeeIds) && attendeeIds.length > 0) {
-      const unique = [...new Set(attendeeIds)].slice(0, ATTENDEE_LIMIT)
-      const people = await User.find({ _id: { $in: unique } }).select("_id")
-      for (const person of people) {
-        if (String(person._id) !== String(me._id)) attendees.push(person._id)
-      }
-    }
-
+    // The host is the only attendee at creation. Invitees are asked to
+    // accept (via a request) before they are added to `attendees`.
     const event = await Event.create({
       title: title.trim(),
       description: description ? String(description) : "",
       location: location ? String(location) : "",
       date: new Date(date),
       host: me._id,
-      attendees,
+      attendees: [me._id],
+      pendingInvites: [],
     })
+
+    let invitesSent = 0
+    if (Array.isArray(inviteeIds) && inviteeIds.length > 0) {
+      const unique = [...new Set(inviteeIds)].slice(0, ATTENDEE_LIMIT)
+      const people = await User.find({ _id: { $in: unique } }).select("_id")
+      for (const person of people) {
+        const invite = await sendEventInvite(event, me, person)
+        if (invite) invitesSent += 1
+      }
+    }
+
+    await event.save()
 
     const populated = await Event.findById(event._id)
       .populate("host", USER_SELECT)
       .populate("attendees", USER_SELECT)
+      .populate("pendingInvites", USER_SELECT)
 
-    return res
-      .status(201)
-      .json({ event: serializeEvent(populated, String(me._id)) })
+    return res.status(201).json({
+      event: serializeEvent(populated, String(me._id)),
+      invitesSent,
+    })
   } catch (error) {
     console.error("Error creating event:", error)
+    return res.status(500).json({ message: "Internal server error" })
+  }
+}
+
+export const inviteToEvent = async (req, res) => {
+  try {
+    const clerkUserId = req.auth?.sub || req.auth?.userId
+    const me = await User.findOne({ clerkUserId })
+    if (!me) return res.status(404).json({ message: "User not found" })
+
+    const event = await Event.findById(req.params.id)
+    if (!event) return res.status(404).json({ message: "Event not found" })
+    if (String(event.host) !== String(me._id)) {
+      return res.status(403).json({ message: "Only the host can invite to this event." })
+    }
+
+    const { inviteeIds } = req.body || {}
+    if (!Array.isArray(inviteeIds) || inviteeIds.length === 0) {
+      return res.status(400).json({ message: "Provide inviteeIds to invite." })
+    }
+
+    const unique = [...new Set(inviteeIds)].slice(0, ATTENDEE_LIMIT)
+    const people = await User.find({ _id: { $in: unique } }).select("_id")
+
+    const sent = []
+    for (const person of people) {
+      const invite = await sendEventInvite(event, me, person)
+      if (invite) sent.push(invite)
+    }
+    await event.save()
+
+    return res.status(200).json({ invitesSent: sent.length, requests: sent })
+  } catch (error) {
+    console.error("Error inviting to event:", error)
     return res.status(500).json({ message: "Internal server error" })
   }
 }

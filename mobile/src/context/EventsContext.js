@@ -8,7 +8,9 @@ import {
   useState,
 } from "react";
 import { useAuth } from "@clerk/clerk-expo";
+import { io } from "socket.io-client";
 import { apiRequest } from "../utils/api";
+import { SOCKET_URL_CANDIDATES } from "../config";
 
 const EventsContext = createContext(null);
 
@@ -42,6 +44,61 @@ export function EventsProvider({ children }) {
     refresh();
   }, [isSignedIn, refresh]);
 
+  // Live updates: accepting an event invite (event:joined) or a host's invite
+  // being accepted (event:inviteAccepted) should refresh the event list.
+  useEffect(() => {
+    if (!isSignedIn) return;
+    let socket = null;
+    let cancelled = false;
+
+    const connect = async () => {
+      const token = await getTokenRef.current();
+      if (!token || cancelled) return;
+
+      for (const url of SOCKET_URL_CANDIDATES) {
+        if (cancelled) return;
+        const candidate = io(url, {
+          auth: { token },
+          transports: ["websocket"],
+          forceNew: true,
+          reconnectionAttempts: 2,
+          timeout: 6000,
+        });
+
+        const ok = await new Promise((resolve) => {
+          const timer = setTimeout(() => resolve(false), 5000);
+          candidate.once("connect", () => {
+            clearTimeout(timer);
+            resolve(true);
+          });
+          candidate.once("connect_error", () => {
+            clearTimeout(timer);
+            resolve(false);
+          });
+        });
+
+        if (ok) {
+          socket = candidate;
+          break;
+        }
+        candidate.close();
+      }
+
+      if (!socket || cancelled) return;
+
+      const handleEvent = () => refresh();
+      socket.on("event:joined", handleEvent);
+      socket.on("event:inviteAccepted", handleEvent);
+    };
+
+    connect();
+
+    return () => {
+      cancelled = true;
+      if (socket) socket.disconnect();
+    };
+  }, [isSignedIn, refresh]);
+
   const createEvent = useCallback(
     async (payload) => {
       const token = await getTokenRef.current();
@@ -57,9 +114,24 @@ export function EventsProvider({ children }) {
     [refresh]
   );
 
+  const inviteToEvent = useCallback(
+    async (eventId, inviteeIds) => {
+      const token = await getTokenRef.current();
+      if (!token) return null;
+      const data = await apiRequest(`/api/events/${eventId}/invite`, {
+        token,
+        method: "POST",
+        body: { inviteeIds },
+      });
+      refresh().catch(() => {});
+      return data;
+    },
+    [refresh]
+  );
+
   const value = useMemo(
-    () => ({ events, loading, error, refresh, createEvent }),
-    [events, loading, error, refresh, createEvent]
+    () => ({ events, loading, error, refresh, createEvent, inviteToEvent }),
+    [events, loading, error, refresh, createEvent, inviteToEvent]
   );
 
   return <EventsContext.Provider value={value}>{children}</EventsContext.Provider>;

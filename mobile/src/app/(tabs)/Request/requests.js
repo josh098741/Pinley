@@ -19,10 +19,18 @@ const REQUESTS_EMPTY_IMAGE = require("../../../../assets/images/requests_back.pn
 
 function RequestCard({ request }) {
   const { respond, cancelRequest } = useRequests();
-  const { sender, recipient, status, _id } = request;
+  const { sender, recipient, status, _id, type, event } = request;
   const isIncoming = status === "pending" && sender && sender._id;
   const user = isIncoming ? sender : recipient;
   const busy = status !== "pending";
+  const isEvent = type === "event";
+
+  const eventDateLabel = event?.date
+    ? new Date(event.date).toLocaleDateString(undefined, {
+        month: "short",
+        day: "numeric",
+      })
+    : null;
 
   return (
     <ClayCard style={{ marginBottom: 14 }}>
@@ -33,16 +41,23 @@ function RequestCard({ request }) {
             <Text numberOfLines={1} className="text-[16px] font-bold text-slate-900">
               {displayName(user)}
             </Text>
-            {isIncoming ? (
+            {isEvent ? (
+              <ClayChip label="Event" tone="pending" />
+            ) : isIncoming ? (
               <ClayChip label="New" tone="pending" />
             ) : (
               <ClayChip label="Pending" tone="pending" />
             )}
           </View>
           <Text numberOfLines={1} className="mt-0.5 text-[13px] font-medium text-slate-500">
-            {user?.email || (user?.pinCode ? `PinCode ${formatPinCode(user.pinCode)}` : "")}
+            {isEvent
+              ? `Invited you to “${event?.title || "an event"}”${
+                  eventDateLabel ? ` · ${eventDateLabel}` : ""
+                }`
+              : user?.email ||
+                (user?.pinCode ? `PinCode ${formatPinCode(user.pinCode)}` : "")}
           </Text>
-          {user?.pinCode ? (
+          {!isEvent && user?.pinCode ? (
             <Text className="mt-0.5 text-[12px] font-bold tracking-wider text-violet-700">
               {formatPinCode(user.pinCode)}
             </Text>
@@ -55,7 +70,7 @@ function RequestCard({ request }) {
           <>
             <ClayButton
               style={{ flex: 1 }}
-              label="Accept"
+              label={isEvent ? "Join event" : "Accept"}
               icon="checkmark"
               onPress={() => respond(_id, "accept")}
               disabled={busy}
@@ -71,7 +86,7 @@ function RequestCard({ request }) {
         ) : (
           <ClayButton
             style={{ flex: 1 }}
-            label="Cancel request"
+            label={isEvent ? "Cancel invite" : "Cancel request"}
             variant="ghost"
             icon="close"
             onPress={() => cancelRequest(_id)}
@@ -84,7 +99,7 @@ function RequestCard({ request }) {
 }
 
 function RecentCard({ request }) {
-  const { sender, recipient, status, incoming } = request;
+  const { sender, recipient, status, incoming, type, event } = request;
   const other = incoming ? sender : recipient;
   const labels = {
     accepted: { tone: "success", text: "Accepted" },
@@ -93,6 +108,12 @@ function RecentCard({ request }) {
   };
   const meta = labels[status] || labels.cancelled;
 
+  const subtitle = type === "event"
+    ? `Event: ${event?.title || "Invite"}`
+    : incoming
+    ? "Requested you"
+    : "You requested";
+
   return (
     <View className="flex-row items-center gap-3 px-2 py-3">
       <Avatar name={displayName(other)} uri={other?.imageUrl} size={42} />
@@ -100,8 +121,8 @@ function RecentCard({ request }) {
         <Text numberOfLines={1} className="text-[14.5px] font-bold text-slate-800">
           {displayName(other)}
         </Text>
-        <Text className="mt-0.5 text-[12px] font-medium text-slate-400">
-          {incoming ? "Requested you" : "You requested"}
+        <Text numberOfLines={1} className="mt-0.5 text-[12px] font-medium text-slate-400">
+          {subtitle}
         </Text>
       </View>
       <ClayChip label={meta.text} tone={meta.tone} />

@@ -22,6 +22,12 @@ const eventSchema = new mongoose.Schema(
         ref: "User",
       },
     ],
+    pendingInvites: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
     date: {
       type: Date,
       required: true,
