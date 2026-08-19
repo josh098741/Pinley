@@ -1,9 +1,11 @@
-import { StatusBar, Text, View, TouchableOpacity } from "react-native";
+import { StatusBar, Text, View, TouchableOpacity, Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { clay } from "../components/clay";
+
+const SOS_BACKGROUND = require("../../assets/images/emergency_sos.png");
 
 const STEPS = [
   {
@@ -95,9 +97,15 @@ export default function SOS() {
 
         {/* Main SOS card */}
         <View
-          className="mt-5 items-center rounded-[28px] px-6 pb-7 pt-9"
-          style={{ backgroundColor: clay.primarySoft }}
+          className="mt-5 items-center overflow-hidden rounded-[28px] px-6 pb-7 pt-9"
+          style={{ backgroundColor: clay.primarySoft, position: "relative" }}
         >
+          <Image
+            source={SOS_BACKGROUND}
+            className="absolute inset-0"
+            style={{ width: "100%", height: "100%", resizeMode: "cover" }}
+          />
+
           <TouchableOpacity
             activeOpacity={0.85}
             onPress={() => {
