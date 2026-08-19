@@ -3,6 +3,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import { BlurView } from "expo-blur";
 import { clay } from "../components/clay";
 
 const SOS_BACKGROUND = require("../../assets/images/emergency_sos.png");
@@ -104,6 +105,12 @@ export default function SOS() {
             source={SOS_BACKGROUND}
             className="absolute inset-0"
             style={{ width: "100%", height: "100%", resizeMode: "cover" }}
+          />
+          <BlurView
+            intensity={40}
+            tint="light"
+            className="absolute inset-0"
+            style={{ width: "100%", height: "100%" }}
           />
 
           <TouchableOpacity
