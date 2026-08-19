@@ -10,6 +10,7 @@ import userRouter from "./routers/user.route.js"
 import requestRouter from "./routers/request.route.js"
 import connectionRouter from "./routers/connection.route.js"
 import eventRouter from "./routers/event.route.js"
+import uploadRouter from "./routers/upload.route.js"
 import { authSocket, initRealtime, registerRealtimeEvents } from "./utils/realtime.js"
 
 const app = express()
@@ -32,6 +33,7 @@ app.use(userRouter)
 app.use(requestRouter)
 app.use(connectionRouter)
 app.use(eventRouter)
+app.use(uploadRouter)
 
 app.get("/health", (req, res) => {
   res.send({ message: "server is healthy" })

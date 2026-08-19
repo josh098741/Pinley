@@ -89,6 +89,7 @@ export function EventsProvider({ children }) {
       const handleEvent = () => refresh();
       socket.on("event:joined", handleEvent);
       socket.on("event:inviteAccepted", handleEvent);
+      socket.on("event:deleted", handleEvent);
     };
 
     connect();
@@ -98,6 +99,20 @@ export function EventsProvider({ children }) {
       if (socket) socket.disconnect();
     };
   }, [isSignedIn, refresh]);
+
+  const deleteEvent = useCallback(
+    async (eventId) => {
+      const token = await getTokenRef.current();
+      if (!token) return null;
+      const data = await apiRequest(`/api/events/${eventId}`, {
+        token,
+        method: "DELETE",
+      });
+      refresh().catch(() => {});
+      return data;
+    },
+    [refresh]
+  );
 
   const createEvent = useCallback(
     async (payload) => {
@@ -137,8 +152,8 @@ export function EventsProvider({ children }) {
   }, []);
 
   const value = useMemo(
-    () => ({ events, loading, error, refresh, getEvent, createEvent, inviteToEvent }),
-    [events, loading, error, refresh, getEvent, createEvent, inviteToEvent]
+    () => ({ events, loading, error, refresh, getEvent, createEvent, inviteToEvent, deleteEvent }),
+    [events, loading, error, refresh, getEvent, createEvent, inviteToEvent, deleteEvent]
   );
 
   return <EventsContext.Provider value={value}>{children}</EventsContext.Provider>;

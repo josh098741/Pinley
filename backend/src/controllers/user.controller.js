@@ -28,7 +28,7 @@ export const updateLocation = async (req, res) => {
     const me = await User.findOneAndUpdate(
       { clerkUserId },
       { $set: { lastKnownLocation } },
-      { new: true, runValidators: true }
+      { returnDocument: 'after', runValidators: true }
     )
 
     if (!me) return res.status(404).json({ message: "User not found" })

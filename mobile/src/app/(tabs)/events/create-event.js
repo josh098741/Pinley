@@ -9,11 +9,14 @@ import {
   Text,
   TextInput,
   View,
+  Image,
 } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { useAuth } from "@clerk/clerk-expo";
+import * as ImagePicker from "expo-image-picker";
 
 import {
   Avatar,
@@ -24,6 +27,7 @@ import {
 
 import { useEvents } from "../../../context/EventsContext";
 import { useRequests } from "../../../context/RequestsContext";
+import { uploadImage } from "../../../utils/api";
 
 /* -------------------------------------------------------
    Date scroll picker helpers
@@ -605,9 +609,57 @@ function StepProgress({ step }) {
   );
 }
 
-function DetailsStep({ title, setTitle, description, setDescription }) {
+function DetailsStep({ title, setTitle, description, setDescription, coverImageUri, setCoverImageUri }) {
+  const pickImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [16, 9],
+      quality: 0.8,
+    });
+
+    if (!result.canceled) {
+      setCoverImageUri(result.assets[0].uri);
+    }
+  };
+
   return (
     <View>
+      <View className="mb-3 rounded-[24px] bg-white p-4">
+        <SectionLabel icon="image-outline">
+          Cover photo <Text className="text-[13px] font-normal text-slate-400">(optional)</Text>
+        </SectionLabel>
+        
+        <Pressable 
+          onPress={pickImage}
+          className="h-32 w-full overflow-hidden rounded-2xl"
+          style={{ backgroundColor: "#F8FAFC", borderWidth: 1, borderColor: "#E2E8F0" }}
+        >
+          {coverImageUri ? (
+            <View className="flex-1 relative">
+              <Image 
+                source={{ uri: coverImageUri }} 
+                className="h-full w-full"
+                resizeMode="cover"
+              />
+              <View className="absolute bottom-2 right-2 rounded-full bg-black/50 px-3 py-1.5 flex-row items-center">
+                <Ionicons name="pencil" size={14} color="white" />
+                <Text className="ml-1 text-[12px] font-semibold text-white">Edit</Text>
+              </View>
+            </View>
+          ) : (
+            <View className="flex-1 items-center justify-center">
+              <View className="mb-2 h-10 w-10 items-center justify-center rounded-full bg-purple-100">
+                <Ionicons name="add" size={24} color="#8B5CF6" />
+              </View>
+              <Text className="text-[13px] font-medium text-slate-500">
+                Add a cover photo
+              </Text>
+            </View>
+          )}
+        </Pressable>
+      </View>
+
       <View className="mb-3 rounded-[24px] bg-white p-4">
         <SectionLabel icon="text">Event title</SectionLabel>
         <FloatingLabelInput
@@ -745,7 +797,7 @@ function InviteStep({ inviteList, invitees, toggleInvitee }) {
   );
 }
 
-function ReviewStep({ title, description, location, selectedDate, selectedTime, invitedUsers }) {
+function ReviewStep({ title, description, location, selectedDate, selectedTime, invitedUsers, coverImageUri }) {
   const dateLabel = selectedDate
     ? selectedDate.toLocaleDateString(undefined, {
         weekday: "short",
@@ -763,10 +815,18 @@ function ReviewStep({ title, description, location, selectedDate, selectedTime, 
 
   return (
     <View>
-      <View className="mb-3 rounded-[24px] bg-white p-4">
-        <Text className="text-[12.5px] font-bold uppercase tracking-wide text-purple-700">
-          {dateLabel} · {timeLabel}
-        </Text>
+      <View className="mb-3 overflow-hidden rounded-[24px] bg-white">
+        {coverImageUri ? (
+          <Image 
+            source={{ uri: coverImageUri }} 
+            className="h-32 w-full"
+            resizeMode="cover"
+          />
+        ) : null}
+        <View className="p-4">
+          <Text className="text-[12.5px] font-bold uppercase tracking-wide text-purple-700">
+            {dateLabel} · {timeLabel}
+          </Text>
         <Text className="mt-1 text-[20px] font-bold text-slate-900">
           {title || "Untitled event"}
         </Text>
@@ -783,6 +843,7 @@ function ReviewStep({ title, description, location, selectedDate, selectedTime, 
             </Text>
           </View>
         ) : null}
+        </View>
       </View>
 
       <View className="mb-3 rounded-[24px] bg-white p-4">
@@ -820,6 +881,9 @@ export default function CreateEvent() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [location, setLocation] = useState("");
+  const [coverImageUri, setCoverImageUri] = useState(null);
+
+  const { getToken } = useAuth();
 
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedTime, setSelectedTime] = useState(() => {
@@ -842,6 +906,7 @@ export default function CreateEvent() {
     setTitle("");
     setDescription("");
     setLocation("");
+    setCoverImageUri(null);
     setSelectedDate(null);
     setSelectedTime(() => {
       const d = new Date();
@@ -943,12 +1008,20 @@ export default function CreateEvent() {
     setSubmitting(true);
 
     try {
+      let coverImageUrl = "";
+      if (coverImageUri) {
+        const token = await getToken();
+        if (!token) throw new Error("Not authenticated");
+        coverImageUrl = await uploadImage(coverImageUri, token);
+      }
+
       const created = await createEvent({
         title: title.trim(),
         description: description.trim(),
         location: location.trim(),
         date: date.toISOString(),
         inviteeIds: [...invitees],
+        coverImageUrl,
       });
 
       if (!created) {
@@ -1031,6 +1104,8 @@ export default function CreateEvent() {
               setTitle={setTitle}
               description={description}
               setDescription={setDescription}
+              coverImageUri={coverImageUri}
+              setCoverImageUri={setCoverImageUri}
             />
           ) : null}
 
@@ -1063,6 +1138,7 @@ export default function CreateEvent() {
               selectedDate={selectedDate}
               selectedTime={selectedTime}
               invitedUsers={invitedUsers}
+              coverImageUri={coverImageUri}
             />
           ) : null}
         </View>

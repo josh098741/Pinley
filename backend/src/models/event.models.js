@@ -41,6 +41,10 @@ const eventSchema = new mongoose.Schema(
       enum: ["upcoming", "cancelled", "completed"],
       default: "upcoming",
     },
+    coverImageUrl: {
+      type: String,
+      default: "",
+    },
   },
   {
     timestamps: true,

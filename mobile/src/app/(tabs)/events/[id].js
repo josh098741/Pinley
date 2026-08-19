@@ -137,7 +137,37 @@ function AttendeeRow({ user }) {
 export default function EventDetail() {
   const router = useRouter();
   const { id } = useLocalSearchParams();
-  const { getEvent } = useEvents();
+  const { getEvent, deleteEvent } = useEvents();
+
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDelete = () => {
+    if (deleting) return;
+    Alert.alert(
+      "Delete event",
+      "This event will be removed for everyone. This cannot be undone.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            setDeleting(true);
+            try {
+              await deleteEvent(id);
+              router.replace("/events");
+            } catch (err) {
+              setDeleting(false);
+              Alert.alert(
+                "Could not delete",
+                err?.message || "Please try again."
+              );
+            }
+          },
+        },
+      ]
+    );
+  };
 
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -145,6 +175,10 @@ export default function EventDetail() {
 
   useEffect(() => {
     let active = true;
+
+    // The screen instance is reused when navigating between events, so reset
+    // the transient delete state whenever the event id changes.
+    setDeleting(false);
 
     const load = async () => {
       setLoading(true);
@@ -382,6 +416,34 @@ export default function EventDetail() {
                 <AttendeeRow key={user._id} user={user} />
               ))}
             </SectionCard>
+          ) : null}
+
+          {/* Host actions */}
+          {event?.isHost ? (
+            <PressableRow onPress={handleDelete}>
+              <View
+                className="mt-4 flex-row items-center justify-center rounded-full py-3.5"
+                style={{
+                  borderWidth: 1.5,
+                  borderColor: clay.danger,
+                  backgroundColor: clay.dangerSoft,
+                  opacity: deleting ? 0.6 : 1,
+                }}
+              >
+                <Ionicons
+                  name="trash-outline"
+                  size={18}
+                  color={clay.danger}
+                  style={{ marginRight: 8 }}
+                />
+                <Text
+                  className="text-[15px] font-bold"
+                  style={{ color: clay.danger }}
+                >
+                  {deleting ? "Deleting…" : "Delete event"}
+                </Text>
+              </View>
+            </PressableRow>
           ) : null}
 
         </ScrollView>

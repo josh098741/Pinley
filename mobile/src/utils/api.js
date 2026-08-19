@@ -75,3 +75,43 @@ export const apiRequest = async (
 
   throw lastError;
 };
+
+export const uploadImage = async (localUri, token) => {
+  // 1. Get signature from backend
+  const signData = await apiRequest("/api/upload/sign", {
+    method: "POST",
+    token,
+    body: { folder: "events" },
+  });
+
+  const { signature, timestamp, apiKey, cloudName, folder } = signData;
+
+  // 2. Upload directly to Cloudinary
+  const formData = new FormData();
+  formData.append("file", {
+    uri: localUri,
+    type: "image/jpeg",
+    name: "upload.jpg",
+  });
+  formData.append("api_key", apiKey);
+  formData.append("timestamp", timestamp);
+  formData.append("signature", signature);
+  formData.append("folder", folder);
+
+  const url = `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`;
+
+  const response = await fetch(url, {
+    method: "POST",
+    body: formData,
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.error?.message || "Image upload failed");
+  }
+
+  return data.secure_url;
+};

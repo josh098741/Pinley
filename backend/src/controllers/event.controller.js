@@ -71,6 +71,7 @@ function serializeEvent(event, meId) {
     time: formatTime(event.date),
     location: event.location,
     status: myStatus,
+    coverImageUrl: event.coverImageUrl || "",
   }
 }
 
@@ -150,7 +151,7 @@ export const createEvent = async (req, res) => {
     const me = await User.findOne({ clerkUserId })
     if (!me) return res.status(404).json({ message: "User not found" })
 
-    const { title, description, location, date, inviteeIds } = req.body || {}
+    const { title, description, location, date, inviteeIds, coverImageUrl } = req.body || {}
 
     if (!title || typeof title !== "string" || !title.trim()) {
       return res.status(400).json({ message: "Event title is required" })
@@ -169,6 +170,7 @@ export const createEvent = async (req, res) => {
       host: me._id,
       attendees: [me._id],
       pendingInvites: [],
+      coverImageUrl: coverImageUrl ? String(coverImageUrl) : "",
     })
 
     let invitesSent = 0
@@ -251,6 +253,49 @@ export const getEvent = async (req, res) => {
     })
   } catch (error) {
     console.error("Error fetching event:", error)
+    return res.status(500).json({ message: "Internal server error" })
+  }
+}
+
+export const deleteEvent = async (req, res) => {
+  try {
+    const clerkUserId = req.auth?.sub || req.auth?.userId
+    const me = await User.findOne({ clerkUserId })
+    if (!me) return res.status(404).json({ message: "User not found" })
+
+    const event = await Event.findById(req.params.id)
+    if (!event) return res.status(404).json({ message: "Event not found" })
+
+    // Only the host may delete their own event.
+    if (String(event.host) !== String(me._id)) {
+      return res.status(403).json({ message: "Only the host can delete this event." })
+    }
+
+    // Remove any pending event invites so recipients don't keep dangling
+    // requests for an event that no longer exists.
+    const pending = await Request.find({
+      type: "event",
+      event: event._id,
+      status: "pending",
+    }).select("recipient")
+
+    await Request.deleteMany({ type: "event", event: event._id })
+
+    await Event.deleteOne({ _id: event._id })
+
+    // Notify attendees (and anyone who had a pending invite) so their
+    // event lists refresh and drop the deleted event.
+    const notified = new Set()
+    for (const attendee of [...(event.attendees || []), ...(event.pendingInvites || []), ...pending.map((p) => p.recipient)]) {
+      const id = String(attendee)
+      if (id === String(me._id) || notified.has(id)) continue
+      notified.add(id)
+      emitToUser(id, "event:deleted", { eventId: String(event._id) })
+    }
+
+    return res.status(200).json({ message: "Event deleted", eventId: String(event._id) })
+  } catch (error) {
+    console.error("Error deleting event:", error)
     return res.status(500).json({ message: "Internal server error" })
   }
 }
