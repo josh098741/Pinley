@@ -160,18 +160,42 @@ function HeroCard({ event, statusLabel, tone }) {
         />
       )}
 
-      {/* Gradient Overlays for Text Readability */}
+      {/* White readability overlay */}
       <LinearGradient
-        colors={["#ffffff", "rgba(255,255,255,0.9)", "rgba(255,255,255,0.5)", "transparent"]}
+        colors={[
+          "rgba(255,255,255,1)",
+          "rgba(255,255,255,0.98)",
+          "rgba(255,255,255,0.92)",
+          "rgba(255,255,255,0.70)",
+          "rgba(255,255,255,0.35)",
+          "rgba(255,255,255,0.08)",
+          "transparent",
+        ]}
+        locations={[0, 0.2, 0.38, 0.52, 0.66, 0.78, 1]}
+        start={{ x: 0, y: 0.5 }}
+        end={{ x: 1, y: 0.5 }}
+        style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
+      />
+
+      {/* Soft white hue / glow */}
+      <LinearGradient
+        colors={[
+          "rgba(255,255,255,0)",
+          "rgba(255,255,255,0.35)",
+          "rgba(255,255,255,0.65)",
+          "rgba(255,255,255,0.25)",
+          "transparent",
+        ]}
+        locations={[0, 0.25, 0.5, 0.75, 1]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
-        style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, width: "85%" }}
-      />
-      <LinearGradient
-        colors={["#ffffff", "rgba(255,255,255,0.9)", "transparent"]}
-        start={{ x: 0, y: 1 }}
-        end={{ x: 0, y: 0 }}
-        style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, height: "100%" }}
+        style={{
+          position: "absolute",
+          top: 0,
+          bottom: 0,
+          left: "28%",
+          width: "45%",
+        }}
       />
 
       {/* Content */}
@@ -235,7 +259,10 @@ function HeroCard({ event, statusLabel, tone }) {
               color: "#0F0C29",
               letterSpacing: -0.5,
               lineHeight: 34,
-              maxWidth: "80%",
+              maxWidth: "90%",
+              textShadowColor: "rgba(255,255,255,0.9)",
+              textShadowOffset: { width: 0, height: 0 },
+              textShadowRadius: 8,
             }}
           >
             {event?.title}
@@ -310,99 +337,97 @@ function InfoRow({ icon, label, value }) {
   );
 }
 
-/* ─── Info + Map card ────────────────────────────────────────── */
+/* ─── Info + Map Section ────────────────────────────────────────── */
 
-function InfoMapCard({ dateParts, event }) {
+function InfoMapSection({ dateParts, event }) {
   return (
-    <ClayCard style={[CARD_BORDER, { marginTop: 14, padding: 0, overflow: "hidden" }]}>
-      <View style={{ flexDirection: "row" }}>
-        <View style={{ flex: 1, paddingHorizontal: 14, paddingVertical: 12 }}>
-          {dateParts ? (
-            <>
-              <InfoRow icon="calendar-outline" label="Date" value={`${dateParts.weekday}, ${dateParts.date}`} />
-              <Separator />
-              <InfoRow icon="time-outline" label="Time" value={dateParts.time} />
-              {event?.location ? <Separator /> : null}
-            </>
-          ) : null}
-          {event?.location ? (
-            <InfoRow icon="location-outline" label="Location" value={event.location} />
-          ) : null}
-        </View>
+    <View style={{ flexDirection: "row", marginBottom: 14 }}>
+      <View style={{ flex: 1, paddingRight: 10 }}>
+        {dateParts ? (
+          <>
+            <InfoRow icon="calendar-outline" label="Date" value={`${dateParts.weekday}, ${dateParts.date}`} />
+            <InfoRow icon="time-outline" label="Time" value={dateParts.time} />
+          </>
+        ) : null}
+        {event?.location ? (
+          <InfoRow icon="location-outline" label="Location" value={event.location} />
+        ) : null}
+      </View>
 
+      <View
+        style={{
+          width: 112,
+          justifyContent: "space-between"
+        }}
+      >
         <View
           style={{
-            width: 112,
-            borderLeftWidth: 1,
-            borderLeftColor: clay.line,
+            flex: 1,
+            backgroundColor: "#F9F8FD",
+            borderRadius: 16,
+            alignItems: "center",
+            justifyContent: "center",
+            minHeight: 90,
+            overflow: "hidden",
+            marginBottom: 8,
           }}
         >
-          <View
-            style={{
-              flex: 1,
-              backgroundColor: "#EDE9FE",
-              alignItems: "center",
-              justifyContent: "center",
-              minHeight: 90,
-            }}
-          >
-            {[0.25, 0.5, 0.75].map((f) => (
-              <View
-                key={`h${f}`}
-                style={{
-                  position: "absolute",
-                  left: 0,
-                  right: 0,
-                  top: `${f * 100}%`,
-                  height: 1,
-                  backgroundColor: "rgba(124,58,237,0.12)",
-                }}
-              />
-            ))}
-            {[0.33, 0.66].map((f) => (
-              <View
-                key={`v${f}`}
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  bottom: 0,
-                  left: `${f * 100}%`,
-                  width: 1,
-                  backgroundColor: "rgba(124,58,237,0.12)",
-                }}
-              />
-            ))}
-            <Ionicons name="location" size={28} color={clay.primary} />
-          </View>
-
-          <TouchableOpacity
-            onPress={() => Alert.alert("Open map", "Map view is coming soon.")}
-            style={{
-              padding: 8,
-              alignItems: "center",
-              borderTopWidth: 1,
-              borderTopColor: clay.line,
-              flexDirection: "row",
-              justifyContent: "center",
-              gap: 4,
-            }}
-          >
-            <Ionicons name="map-outline" size={13} color={clay.primary} />
-            <Text style={{ fontSize: 11.5, fontWeight: "700", color: clay.primaryDeep }}>
-              View on map
-            </Text>
-          </TouchableOpacity>
+          {[0.25, 0.5, 0.75].map((f) => (
+            <View
+              key={`h${f}`}
+              style={{
+                position: "absolute",
+                left: 0,
+                right: 0,
+                top: `${f * 100}%`,
+                height: 1,
+                backgroundColor: "rgba(124,58,237,0.08)",
+              }}
+            />
+          ))}
+          {[0.33, 0.66].map((f) => (
+            <View
+              key={`v${f}`}
+              style={{
+                position: "absolute",
+                top: 0,
+                bottom: 0,
+                left: `${f * 100}%`,
+                width: 1,
+                backgroundColor: "rgba(124,58,237,0.08)",
+              }}
+            />
+          ))}
+          <Ionicons name="location" size={28} color={clay.primary} />
         </View>
+
+        <TouchableOpacity
+          onPress={() => Alert.alert("Open map", "Map view is coming soon.")}
+          style={{
+            padding: 10,
+            backgroundColor: "#F9F8FD",
+            borderRadius: 12,
+            alignItems: "center",
+            flexDirection: "row",
+            justifyContent: "center",
+            gap: 4,
+          }}
+        >
+          <Ionicons name="map-outline" size={13} color={clay.primary} />
+          <Text style={{ fontSize: 11.5, fontWeight: "700", color: clay.primaryDeep }}>
+            View on map
+          </Text>
+        </TouchableOpacity>
       </View>
-    </ClayCard>
+    </View>
   );
 }
 
-/* ─── About card ─────────────────────────────────────────────── */
+/* ─── About Section ─────────────────────────────────────────────── */
 
-function AboutCard({ description }) {
+function AboutSection({ description }) {
   return (
-    <ClayCard style={[CARD_BORDER, { marginTop: 14 }]}>
+    <View style={{ backgroundColor: "#F9F8FD", borderRadius: 16, padding: 14, marginBottom: 14 }}>
       <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 8 }}>
         <View
           style={{
@@ -431,36 +456,34 @@ function AboutCard({ description }) {
       <Text style={{ fontSize: 14, fontWeight: "500", color: "#475569", lineHeight: 21 }}>
         {description}
       </Text>
-    </ClayCard>
+    </View>
   );
 }
 
-/* ─── Going card ─────────────────────────────────────────────── */
+/* ─── Going Section ─────────────────────────────────────────────── */
 
-function GoingCard({ attendees }) {
+function GoingSection({ attendees }) {
   return (
-    <ClayCard style={[CARD_BORDER, { marginTop: 14 }]}>
-      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-          <View
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: 12,
-              backgroundColor: clay.primarySoft,
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <Ionicons name="people-outline" size={17} color={clay.primary} />
-          </View>
-          <Text style={{ fontSize: 15, fontWeight: "700", color: "#0F0C29" }}>
-            Going ({attendees.length})
-          </Text>
+    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", backgroundColor: "#F9F8FD", borderRadius: 16, padding: 14 }}>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+        <View
+          style={{
+            width: 36,
+            height: 36,
+            borderRadius: 12,
+            backgroundColor: clay.primarySoft,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Ionicons name="people-outline" size={17} color={clay.primary} />
         </View>
-        <Ionicons name="chevron-forward" size={18} color={clay.muted} />
+        <Text style={{ fontSize: 15, fontWeight: "700", color: "#0F0C29" }}>
+          Going ({attendees.length})
+        </Text>
       </View>
-    </ClayCard>
+      <Ionicons name="chevron-forward" size={18} color={clay.ink} />
+    </View>
   );
 }
 
@@ -770,14 +793,17 @@ export default function EventDetail() {
             {/* Hero card */}
             <HeroCard event={event} statusLabel={statusLabel} tone={tone} />
 
-            {/* Date / Time / Location + Map */}
-            <InfoMapCard dateParts={dateParts} event={event} />
+            {/* Details Container Card */}
+            <ClayCard style={[CARD_BORDER, { marginTop: 14, padding: 14 }]}>
+              {/* Date / Time / Location + Map */}
+              <InfoMapSection dateParts={dateParts} event={event} />
 
-            {/* About */}
-            {event?.description ? <AboutCard description={event.description} /> : null}
+              {/* About */}
+              {event?.description ? <AboutSection description={event.description} /> : null}
 
-            {/* Going */}
-            <GoingCard attendees={attendees} />
+              {/* Going */}
+              <GoingSection attendees={attendees} />
+            </ClayCard>
 
             {/* Divider */}
             <View
