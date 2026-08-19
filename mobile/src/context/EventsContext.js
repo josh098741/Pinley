@@ -151,9 +151,24 @@ export function EventsProvider({ children }) {
     return data.event || null;
   }, []);
 
+  const updateEvent = useCallback(
+    async (eventId, payload) => {
+      const token = await getTokenRef.current();
+      if (!token) return null;
+      const data = await apiRequest(`/api/events/${eventId}`, {
+        token,
+        method: "PUT",
+        body: payload,
+      });
+      refresh().catch(() => {});
+      return data.event || null;
+    },
+    [refresh]
+  );
+
   const value = useMemo(
-    () => ({ events, loading, error, refresh, getEvent, createEvent, inviteToEvent, deleteEvent }),
-    [events, loading, error, refresh, getEvent, createEvent, inviteToEvent, deleteEvent]
+    () => ({ events, loading, error, refresh, getEvent, createEvent, inviteToEvent, deleteEvent, updateEvent }),
+    [events, loading, error, refresh, getEvent, createEvent, inviteToEvent, deleteEvent, updateEvent]
   );
 
   return <EventsContext.Provider value={value}>{children}</EventsContext.Provider>;

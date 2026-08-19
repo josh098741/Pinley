@@ -64,7 +64,7 @@ function PressableRow({ onPress, children }) {
 
 /* ─── Header ─────────────────────────────────────────────────── */
 
-function Header({ onBack, onShare }) {
+function Header({ onBack, onShare, onMore }) {
   return (
     <View
       style={{
@@ -114,7 +114,7 @@ function Header({ onBack, onShare }) {
             <Ionicons name="share-social-outline" size={18} color={clay.ink} />
           </View>
         </PressableRow>
-        <PressableRow onPress={() => {}}>
+        <PressableRow onPress={onMore}>
           <View
             style={{
               width: 36,
@@ -572,41 +572,8 @@ function UserCard({ user }) {
 
 /* ─── Bottom bar ─────────────────────────────────────────────── */
 
-function BottomBar({ isHost, deleting, onDelete, onChangeResponse }) {
-  if (isHost) {
-    return (
-      <View
-        style={{
-          paddingHorizontal: 16,
-          paddingVertical: 14,
-          borderTopWidth: 1,
-          borderTopColor: clay.line,
-          backgroundColor: clay.bg,
-        }}
-      >
-        <TouchableOpacity
-          onPress={onDelete}
-          disabled={deleting}
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "center",
-            borderRadius: 999,
-            paddingVertical: 15,
-            borderWidth: 1.5,
-            borderColor: clay.danger,
-            backgroundColor: clay.dangerSoft,
-            opacity: deleting ? 0.6 : 1,
-          }}
-        >
-          <Ionicons name="trash-outline" size={18} color={clay.danger} style={{ marginRight: 8 }} />
-          <Text style={{ fontSize: 15, fontWeight: "700", color: clay.danger }}>
-            {deleting ? "Deleting…" : "Delete event"}
-          </Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }
+function BottomBar({ isHost, onChangeResponse }) {
+  if (isHost) return null;
 
   return (
     <View
@@ -647,16 +614,14 @@ function BottomBar({ isHost, deleting, onDelete, onChangeResponse }) {
 export default function EventDetail() {
   const router = useRouter();
   const { id } = useLocalSearchParams();
-  const { getEvent, deleteEvent } = useEvents();
+  const { getEvent } = useEvents();
 
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     let active = true;
-    setDeleting(false);
 
     const load = async () => {
       setLoading(true);
@@ -698,31 +663,6 @@ export default function EventDetail() {
   const attendees = event?.attendees || [];
   const pending = event?.pendingInvites || [];
 
-  const handleDelete = () => {
-    if (deleting) return;
-    Alert.alert(
-      "Delete event",
-      "This event will be removed for everyone. This cannot be undone.",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: async () => {
-            setDeleting(true);
-            try {
-              await deleteEvent(id);
-              router.replace("/events");
-            } catch (err) {
-              setDeleting(false);
-              Alert.alert("Could not delete", err?.message || "Please try again.");
-            }
-          },
-        },
-      ]
-    );
-  };
-
   const handleShare = async () => {
     try {
       await Share.share({ message: `Check out this event: ${event?.title || ""}` });
@@ -745,7 +685,11 @@ export default function EventDetail() {
     <SafeAreaView style={{ flex: 1, backgroundColor: clay.bg }}>
       <StatusBar barStyle="dark-content" backgroundColor={clay.bg} />
 
-      <Header onBack={() => router.back()} onShare={handleShare} />
+      <Header
+        onBack={() => router.back()}
+        onShare={handleShare}
+        onMore={() => router.push(`/events/${id}/edit`)}
+      />
 
       {loading ? (
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
@@ -843,8 +787,6 @@ export default function EventDetail() {
           {/* Bottom action bar */}
           <BottomBar
             isHost={event?.isHost}
-            deleting={deleting}
-            onDelete={handleDelete}
             onChangeResponse={handleChangeResponse}
           />
         </>

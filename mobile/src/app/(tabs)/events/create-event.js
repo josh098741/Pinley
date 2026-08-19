@@ -152,7 +152,7 @@ function PickerColumn({ data, selectedIndex, onSelect, renderLabel, keyExtractor
    Three-column date picker
 ------------------------------------------------------- */
 
-function DateScrollPicker({ selectedDate, onDateChange }) {
+export function DateScrollPicker({ selectedDate, onDateChange }) {
   const today = new Date();
 
   const years = useMemo(() => buildYearList(), []);
@@ -292,7 +292,7 @@ const HOURS = Array.from({ length: 12 }, (_, i) => i + 1);       // 1-12
 const MINUTES = Array.from({ length: 12 }, (_, i) => i * 5);     // 0,5,10,...55
 const PERIODS = ["AM", "PM"];
 
-function TimeScrollPicker({ selectedTime, onTimeChange }) {
+export function TimeScrollPicker({ selectedTime, onTimeChange }) {
   // Derive initial indices
   const init = selectedTime || (() => { const d = new Date(); return d; })();
   const initH24 = init.getHours();
@@ -397,7 +397,7 @@ function TimeScrollPicker({ selectedTime, onTimeChange }) {
    Section label
 ------------------------------------------------------- */
 
-function SectionLabel({ icon, children, right }) {
+export function SectionLabel({ icon, children, right }) {
   return (
     <View className="mb-2.5 flex-row items-center justify-between">
       <View className="flex-row items-center">
@@ -415,7 +415,7 @@ function SectionLabel({ icon, children, right }) {
    Floating label input
 ------------------------------------------------------- */
 
-function FloatingLabelInput({
+export function FloatingLabelInput({
   label,
   value,
   onChangeText,
