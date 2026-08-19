@@ -83,7 +83,8 @@ function CustomTabBar({ state, descriptors, navigation }) {
   const activeRouteName = state.routeNames?.[state.index];
   if (
     activeRouteName === "events/index" ||
-    activeRouteName === "events/create-event"
+    activeRouteName === "events/create-event" ||
+    activeRouteName === "events/[id]"
   ) {
     return null;
   }

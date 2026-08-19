@@ -129,9 +129,16 @@ export function EventsProvider({ children }) {
     [refresh]
   );
 
+  const getEvent = useCallback(async (eventId) => {
+    const token = await getTokenRef.current();
+    if (!token) return null;
+    const data = await apiRequest(`/api/events/${eventId}`, { token });
+    return data.event || null;
+  }, []);
+
   const value = useMemo(
-    () => ({ events, loading, error, refresh, createEvent, inviteToEvent }),
-    [events, loading, error, refresh, createEvent, inviteToEvent]
+    () => ({ events, loading, error, refresh, getEvent, createEvent, inviteToEvent }),
+    [events, loading, error, refresh, getEvent, createEvent, inviteToEvent]
   );
 
   return <EventsContext.Provider value={value}>{children}</EventsContext.Provider>;

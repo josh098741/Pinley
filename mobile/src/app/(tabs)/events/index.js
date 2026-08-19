@@ -506,7 +506,7 @@ export default function Events() {
                     key={event._id || event.id}
                     event={event}
                     onPress={() => {
-                      // 👉 navigate to event details
+                      router.push(`/events/${event._id || event.id}`);
                     }}
                   />
                 ))

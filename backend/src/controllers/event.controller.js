@@ -198,6 +198,63 @@ export const createEvent = async (req, res) => {
   }
 }
 
+function publicUser(u) {
+  if (!u) return null
+  const name =
+    [u.firstName, u.lastName].filter(Boolean).join(" ").trim() ||
+    u.username ||
+    u.email ||
+    "Unknown"
+  return {
+    id: String(u._id),
+    _id: String(u._id),
+    firstName: u.firstName || "",
+    lastName: u.lastName || "",
+    username: u.username || "",
+    email: u.email || "",
+    imageUrl: u.imageUrl || "",
+    name,
+  }
+}
+
+export const getEvent = async (req, res) => {
+  try {
+    const clerkUserId = req.auth?.sub || req.auth?.userId
+    const me = await User.findOne({ clerkUserId })
+    if (!me) return res.status(404).json({ message: "User not found" })
+
+    const event = await Event.findById(req.params.id)
+      .populate("host", USER_SELECT)
+      .populate("attendees", USER_SELECT)
+      .populate("pendingInvites", USER_SELECT)
+
+    if (!event) return res.status(404).json({ message: "Event not found" })
+
+    const meId = String(me._id)
+    const base = serializeEvent(event, meId)
+
+    const attendeesList = (event.attendees || [])
+      .map(publicUser)
+      .filter(Boolean)
+    const pendingList = (event.pendingInvites || [])
+      .map(publicUser)
+      .filter(Boolean)
+
+    return res.status(200).json({
+      event: {
+        ...base,
+        host: publicUser(event.host),
+        attendees: attendeesList,
+        attendeeCount: attendeesList.length,
+        pendingInvites: pendingList,
+      },
+    })
+  } catch (error) {
+    console.error("Error fetching event:", error)
+    return res.status(500).json({ message: "Internal server error" })
+  }
+}
+
 export const inviteToEvent = async (req, res) => {
   try {
     const clerkUserId = req.auth?.sub || req.auth?.userId
