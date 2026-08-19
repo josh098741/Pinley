@@ -924,7 +924,7 @@ export default function CreateEvent() {
         throw new Error("Could not create the event.");
       }
 
-      router.back();
+      router.replace("/events");
     } catch (err) {
       setError(
         err?.message ||
