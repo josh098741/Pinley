@@ -40,6 +40,45 @@ export const updateLocation = async (req, res) => {
   }
 }
 
+const PHONE_E164 = /^\+?[1-9]\d{6,14}$/
+
+const normalizePhone = (raw) =>
+  typeof raw === "string" ? raw.replace(/[^\d+]/g, "") : ""
+
+export const updateProfile = async (req, res) => {
+  try {
+    const clerkUserId = req.auth?.sub || req.auth?.userId
+    const { phoneNumber } = req.body || {}
+
+    const patch = {}
+    if (phoneNumber !== undefined) {
+      const normalized = normalizePhone(phoneNumber)
+      if (normalized && !PHONE_E164.test(normalized)) {
+        return res
+          .status(400)
+          .json({ message: "Please enter a valid phone number (7-15 digits, optionally starting with +)." })
+      }
+      patch.phoneNumber = normalized || null
+    }
+
+    if (Object.keys(patch).length === 0) {
+      return res.status(400).json({ message: "No updatable fields provided" })
+    }
+
+    const me = await User.findOneAndUpdate(
+      { clerkUserId },
+      { $set: patch },
+      { returnDocument: "after", runValidators: true }
+    )
+    if (!me) return res.status(404).json({ message: "User not found" })
+
+    return res.status(200).json({ user: { phoneNumber: me.phoneNumber } })
+  } catch (error) {
+    console.error("Error updating profile:", error)
+    return res.status(500).json({ message: "Internal server error" })
+  }
+}
+
 const normalizeCode = (input = "") =>
   input
     .toUpperCase()

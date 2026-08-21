@@ -154,20 +154,21 @@ export function RadioCard({ title, description, selected, onPress }) {
   );
 }
 
-export function SaveBar({ visible, saving, onSave, onDiscard }) {
+export function SaveBar({ visible, saving, onSave, onDiscard, disabled = false }) {
   const insets = useSafeAreaInsets();
   if (!visible) return null;
+  const blocked = saving || disabled;
   return (
     <View
       style={{ bottom: insets.bottom + 96 }}
       className="absolute left-0 right-0 flex-row items-center justify-between border-t border-slate-200 bg-white px-6 py-4"
     >
-      <Pressable onPress={onDiscard} disabled={saving} className="px-4 py-2.5">
+      <Pressable onPress={onDiscard} disabled={blocked} className="px-4 py-2.5">
         <Text className="text-[14px] font-bold text-slate-500">Discard</Text>
       </Pressable>
       <Pressable
         onPress={onSave}
-        disabled={saving}
+        disabled={blocked}
         className="flex-row items-center gap-2 rounded-full bg-slate-900 px-6 py-3"
       >
         {saving ? <ActivityIndicator size="small" color="#fff" /> : null}

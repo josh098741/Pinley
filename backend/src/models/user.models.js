@@ -34,6 +34,17 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    phoneNumber: {
+      type: String,
+      default: null,
+      validate: {
+        validator: function (v) {
+          if (!v) return true
+          return /^\+?[1-9]\d{6,14}$/.test(v)
+        },
+        message: "Phone number must contain 7-15 digits, optionally starting with +",
+      },
+    },
     imageUrl: {
       type: String,
       default: "",

@@ -13,8 +13,18 @@ import { useClerk } from "@clerk/clerk-expo";
 import { Ionicons } from "@expo/vector-icons";
 import { NavHeader, SectionLabel, Divider, NavRow, SaveBar, GREEN, AMBER, RED } from "./common";
 import { useProfilePrefs } from "../../hooks/useProfilePrefs";
+import { apiRequest } from "../../utils/api";
 
-export default function AccountSettingsView({ onBack, user }) {
+const PHONE_INPUT_FILTER = /[^\d+\-()\s.]/g;
+const PHONE_E164 = /^\+?[1-9]\d{6,14}$/;
+
+const sanitizePhone = (raw) => (raw ? raw.replace(PHONE_INPUT_FILTER, "") : "");
+const isValidPhone = (raw) => {
+  const norm = (raw || "").replace(/[^\d+]/g, "");
+  return norm === "" || PHONE_E164.test(norm);
+};
+
+export default function AccountSettingsView({ onBack, user, getToken }) {
   const { signOut } = useClerk();
   const { prefs, save } = useProfilePrefs(user);
 
@@ -27,15 +37,27 @@ export default function AccountSettingsView({ onBack, user }) {
   const [deleting, setDeleting] = useState(false);
 
   const dirty = fullName !== initialName || phone !== initialPhone;
+  const phoneError = phone.trim() !== "" && !isValidPhone(phone);
   const email = user?.emailAddresses?.[0]?.emailAddress || "";
   const emailVerified = user?.emailAddresses?.[0]?.verification?.status === "verified";
 
   const handleSave = async () => {
+    if (phoneError) return;
     setSaving(true);
     try {
       const [firstName, ...rest] = fullName.trim().split(" ");
       await user?.update?.({ firstName, lastName: rest.join(" ") });
       await save({ account: { phone: phone.trim() } });
+
+      const token = await getToken?.();
+      if (token) {
+        await apiRequest("/api/users/me", {
+          token,
+          method: "PATCH",
+          body: { phoneNumber: phone.trim() },
+        });
+      }
+
       Alert.alert("Saved", "Your account details have been updated.");
     } catch (err) {
       console.error("Failed to update account:", err);
@@ -115,11 +137,16 @@ export default function AccountSettingsView({ onBack, user }) {
             <Text className="mb-1.5 text-[12px] font-bold text-slate-400">Phone Number</Text>
             <TextInput
               value={phone}
-              onChangeText={setPhone}
+              onChangeText={(text) => setPhone(sanitizePhone(text))}
               placeholder="+254 7XX XXX XXX"
               keyboardType="phone-pad"
               className="text-[15px] font-semibold text-slate-900"
             />
+            {phoneError ? (
+              <Text className="mt-1.5 text-[12px] font-medium text-red-500">
+                Enter a valid phone number (7-15 digits, optionally starting with +).
+              </Text>
+            ) : null}
           </View>
         </View>
 
@@ -169,7 +196,7 @@ export default function AccountSettingsView({ onBack, user }) {
           </Pressable>
         </View>
       </ScrollView>
-      <SaveBar visible={dirty} saving={saving} onSave={handleSave} onDiscard={handleDiscard} />
+      <SaveBar visible={dirty} saving={saving} onSave={handleSave} onDiscard={handleDiscard} disabled={phoneError} />
     </View>
   );
 }

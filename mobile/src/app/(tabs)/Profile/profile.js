@@ -79,7 +79,7 @@ export default function Profile() {
     return <LocationServicesView onBack={backToProfile} user={user} />;
   }
   if (view === VIEWS.ACCOUNT) {
-    return <AccountSettingsView onBack={backToProfile} user={user} />;
+    return <AccountSettingsView onBack={backToProfile} user={user} getToken={getToken} />;
   }
   if (view === VIEWS.PRIVACY) {
     return <PrivacySafetyView onBack={backToProfile} user={user} />;
