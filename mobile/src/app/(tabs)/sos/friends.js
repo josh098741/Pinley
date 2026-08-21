@@ -1,4 +1,4 @@
-import { ScrollView, StatusBar, Text, TouchableOpacity, View } from "react-native";
+import { Alert, ScrollView, StatusBar, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -13,7 +13,7 @@ import {
 } from "../../../components/clay";
 import { formatPinCode } from "../../../utils/pincode";
 
-function FriendCard({ person }) {
+function FriendCard({ person, trusted, pending, onAdd, onRemove }) {
   return (
     <ClayCard style={{ marginBottom: 12 }}>
       <View className="flex-row items-center gap-4">
@@ -31,12 +31,45 @@ function FriendCard({ person }) {
             </Text>
           ) : null}
         </View>
-        <View
-          className="items-center justify-center rounded-full"
-          style={{ width: 32, height: 32, backgroundColor: clay.primarySoft }}
-        >
-          <Ionicons name="shield-checkmark" size={16} color={clay.success} />
-        </View>
+
+        {trusted ? (
+          <View className="items-end gap-1.5">
+            <View
+              className="flex-row items-center gap-1 rounded-full px-3 py-1.5"
+              style={{ backgroundColor: clay.successSoft }}
+            >
+              <Ionicons name="shield-checkmark" size={14} color={clay.success} />
+              <Text className="font-extrabold" style={{ color: clay.success, fontSize: 12 }}>
+                Trusted
+              </Text>
+            </View>
+            <TouchableOpacity onPress={() => onRemove(person)}>
+              <Text className="font-bold" style={{ color: clay.danger, fontSize: 12 }}>
+                Remove
+              </Text>
+            </TouchableOpacity>
+          </View>
+        ) : pending ? (
+          <View
+            className="rounded-full px-3 py-1.5"
+            style={{ backgroundColor: clay.primarySoft }}
+          >
+            <Text className="font-extrabold" style={{ color: clay.purple, fontSize: 12 }}>
+              Pending
+            </Text>
+          </View>
+        ) : (
+          <TouchableOpacity
+            onPress={() => onAdd(person)}
+            className="flex-row items-center gap-1 rounded-full px-3 py-2"
+            style={{ backgroundColor: clay.primary }}
+          >
+            <Ionicons name="add" size={14} color="#fff" />
+            <Text className="font-extrabold" style={{ color: "#fff", fontSize: 12 }}>
+              Add
+            </Text>
+          </TouchableOpacity>
+        )}
       </View>
     </ClayCard>
   );
@@ -46,15 +79,49 @@ function FriendsEmptyState() {
   return (
     <EmptyState
       icon="people"
-      title="No trusted contacts yet"
-      subtitle="Add friends you trust so they can receive your SOS alerts and location in an emergency."
+      title="No friends yet"
+      subtitle="Trusted contacts are chosen from your friends. Add friends first, then mark the ones you trust with your safety."
     />
   );
 }
 
 export default function TrustedContacts() {
   const router = useRouter();
-  const { connections, connectionsLoading } = useRequests();
+  const {
+    connections,
+    connectionsLoading,
+    trustedContacts,
+    outgoing,
+    sendRequest,
+    removeTrustedContact,
+  } = useRequests();
+
+  const trustedSet = new Set((trustedContacts || []).map(String));
+  const pendingTrustSet = new Set(
+    (outgoing || [])
+      .filter((r) => r.type === "trust" && r.status === "pending")
+      .map((r) => String(r.recipient?._id || r.recipient))
+  );
+
+  const handleAdd = async (person) => {
+    try {
+      await sendRequest({ recipientId: person._id, type: "trust" });
+      Alert.alert(
+        "Request sent",
+        `We asked ${displayName(person)} to be your trusted contact. They'll be added once they accept.`
+      );
+    } catch (e) {
+      Alert.alert("Couldn't send", e?.message || "Something went wrong.");
+    }
+  };
+
+  const handleRemove = async (person) => {
+    try {
+      await removeTrustedContact(person._id);
+    } catch (e) {
+      Alert.alert("Couldn't remove", e?.message || "Something went wrong.");
+    }
+  };
 
   return (
     <SafeAreaView className="flex-1" style={{ backgroundColor: clay.bg }}>
@@ -84,7 +151,7 @@ export default function TrustedContacts() {
               Trusted Contacts
             </Text>
             <Text className="mt-0.5 text-[12.5px] font-medium leading-4 text-slate-500">
-              These friends will receive your SOS alert and live location.
+              Your friends. Tap “Add” to ask someone to be a trusted contact.
             </Text>
           </View>
         </View>
@@ -103,11 +170,21 @@ export default function TrustedContacts() {
           ) : connections.length > 0 ? (
             <>
               <Text className="mb-3 text-[16px] font-bold text-slate-800">
-                {connections.length} {connections.length === 1 ? "contact" : "contacts"}
+                {connections.length} {connections.length === 1 ? "friend" : "friends"}
               </Text>
-              {connections.map((person) => (
-                <FriendCard key={person._id} person={person} />
-              ))}
+              {connections.map((person) => {
+                const id = String(person._id);
+                return (
+                  <FriendCard
+                    key={person._id}
+                    person={person}
+                    trusted={trustedSet.has(id)}
+                    pending={pendingTrustSet.has(id)}
+                    onAdd={handleAdd}
+                    onRemove={handleRemove}
+                  />
+                );
+              })}
             </>
           ) : (
             <FriendsEmptyState />
@@ -115,8 +192,8 @@ export default function TrustedContacts() {
 
           <View className="mt-4">
             <ClayButton
-              label="Add trusted contacts"
-              icon="add"
+              label="Find friends"
+              icon="person-add"
               onPress={() => router.push("/request-search")}
             />
           </View>

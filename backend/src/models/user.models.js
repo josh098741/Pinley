@@ -42,6 +42,13 @@ const userSchema = new mongoose.Schema(
       type: [String],
       default: [],
     },
+    // Users this account explicitly trusts with their SOS alert + live location.
+    trustedContacts: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
     lastKnownLocation: {
       latitude: { type: Number },
       longitude: { type: Number },

@@ -16,7 +16,7 @@ const requestSchema = new mongoose.Schema(
     },
     type: {
       type: String,
-      enum: ["connection", "event"],
+      enum: ["connection", "event", "trust"],
       default: "connection",
       index: true,
     },

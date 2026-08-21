@@ -25,6 +25,7 @@ export function RequestsProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const [connections, setConnections] = useState([]);
   const [connectionsLoading, setConnectionsLoading] = useState(true);
+  const [trustedContacts, setTrustedContacts] = useState([]);
   const [connected, setConnected] = useState(false);
   const socketRef = useRef(null);
 
@@ -49,6 +50,7 @@ export function RequestsProvider({ children }) {
     try {
       const data = await apiRequest("/api/connections", { token });
       setConnections(data.connections || []);
+      setTrustedContacts(data.trustedContacts || []);
     } catch (err) {
       console.error("Failed to load connections:", err);
     } finally {
@@ -133,19 +135,33 @@ export function RequestsProvider({ children }) {
   }, [isSignedIn, refresh, refreshConnections]);
 
   const sendRequest = useCallback(
-    async ({ recipientId, pinCode }) => {
+    async ({ recipientId, pinCode, type }) => {
       const token = await getTokenRef.current();
       if (!token) return null;
       const data = await apiRequest("/api/requests", {
         token,
         method: "POST",
-        body: { recipientId, pinCode },
+        body: { recipientId, pinCode, type },
       });
       // Refresh in the background — don't block the caller
       refresh().catch(() => {});
       return data.request || null;
     },
     [refresh]
+  );
+
+  const removeTrustedContact = useCallback(
+    async (userId) => {
+      const token = await getTokenRef.current();
+      if (!token) return;
+      await apiRequest(`/api/trust/${userId}`, {
+        token,
+        method: "DELETE",
+      });
+      // Refresh in the background
+      refreshConnections().catch(() => {});
+    },
+    [refreshConnections]
   );
 
   const respond = useCallback(
@@ -186,12 +202,14 @@ export function RequestsProvider({ children }) {
       loading,
       connections,
       connectionsLoading,
+      trustedContacts,
       connected,
       refresh,
       refreshConnections,
       sendRequest,
       respond,
       cancelRequest,
+      removeTrustedContact,
     }),
     [
       incoming,
@@ -200,12 +218,14 @@ export function RequestsProvider({ children }) {
       loading,
       connections,
       connectionsLoading,
+      trustedContacts,
       connected,
       refresh,
       refreshConnections,
       sendRequest,
       respond,
       cancelRequest,
+      removeTrustedContact,
     ]
   );
 

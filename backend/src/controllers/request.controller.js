@@ -69,7 +69,8 @@ export const sendRequest = async (req, res) => {
     const me = await getCurrentUser(req)
     if (!me) return res.status(404).json({ message: "User not found" })
 
-    const { recipientId, pinCode } = req.body || {}
+    const { recipientId, pinCode, type } = req.body || {}
+    const requestType = type === "trust" ? "trust" : "connection"
 
     let recipient
     if (recipientId) {
@@ -86,12 +87,29 @@ export const sendRequest = async (req, res) => {
     }
 
     const connected = await findConnection(me._id, recipient._id)
-    if (connected) {
+
+    if (requestType === "trust") {
+      // Trusted contacts must already be friends.
+      if (!connected) {
+        return res.status(400).json({
+          message: `You can only add friends as trusted contacts. Connect with ${displayName(recipient)} first.`,
+        })
+      }
+      const alreadyTrusted = (me.trustedContacts || []).some(
+        (id) => String(id) === String(recipient._id)
+      )
+      if (alreadyTrusted) {
+        return res.status(409).json({
+          message: `${displayName(recipient)} is already one of your trusted contacts.`,
+        })
+      }
+    } else if (connected) {
       return res.status(409).json({ message: `You are already connected with ${displayName(recipient)}.` })
     }
 
     const existing = await Request.findOne({
       status: "pending",
+      type: requestType,
       $or: [
         { sender: me._id, recipient: recipient._id },
         { sender: recipient._id, recipient: me._id },
@@ -105,7 +123,11 @@ export const sendRequest = async (req, res) => {
       return res.status(409).json({ message: `${displayName(recipient)} already sent you a request.` })
     }
 
-    const created = await Request.create({ sender: me._id, recipient: recipient._id })
+    const created = await Request.create({
+      sender: me._id,
+      recipient: recipient._id,
+      type: requestType,
+    })
     const request = await Request.findById(created._id)
       .populate("sender", USER_SELECT)
       .populate("recipient", USER_SELECT)
@@ -162,6 +184,12 @@ export const respondToRequest = async (req, res) => {
             userId: String(me._id),
           })
         }
+      } else if (request.type === "trust") {
+        // Accepting a trust request means the sender may list the recipient as
+        // one of their trusted contacts (the recipient consents to receive SOS).
+        await User.findByIdAndUpdate(request.sender, {
+          $addToSet: { trustedContacts: request.recipient },
+        })
       } else {
         await createConnection(me._id, request.sender)
       }

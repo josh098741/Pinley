@@ -24,6 +24,7 @@ function RequestCard({ request }) {
   const user = isIncoming ? sender : recipient;
   const busy = status !== "pending";
   const isEvent = type === "event";
+  const isTrust = type === "trust";
 
   const eventDateLabel = event?.date
     ? new Date(event.date).toLocaleDateString(undefined, {
@@ -43,6 +44,8 @@ function RequestCard({ request }) {
             </Text>
             {isEvent ? (
               <ClayChip label="Event" tone="pending" />
+            ) : isTrust ? (
+              <ClayChip label="Trusted" tone="pending" />
             ) : isIncoming ? (
               <ClayChip label="New" tone="pending" />
             ) : (
@@ -54,6 +57,10 @@ function RequestCard({ request }) {
               ? `Invited you to “${event?.title || "an event"}”${
                   eventDateLabel ? ` · ${eventDateLabel}` : ""
                 }`
+              : isTrust
+              ? isIncoming
+                ? "Wants to add you as a trusted contact"
+                : "You asked to be their trusted contact"
               : user?.email ||
                 (user?.pinCode ? `PinCode ${formatPinCode(user.pinCode)}` : "")}
           </Text>
@@ -110,6 +117,10 @@ function RecentCard({ request }) {
 
   const subtitle = type === "event"
     ? `Event: ${event?.title || "Invite"}`
+    : type === "trust"
+    ? incoming
+      ? "Added you as a trusted contact"
+      : "You added as a trusted contact"
     : incoming
     ? "Requested you"
     : "You requested";

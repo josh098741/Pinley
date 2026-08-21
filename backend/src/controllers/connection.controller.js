@@ -1,3 +1,4 @@
+import mongoose from "mongoose"
 import User from "../models/user.models.js"
 import Connection from "../models/connection.models.js"
 
@@ -27,9 +28,37 @@ export const getConnections = async (req, res) => {
       }
     })
 
-    return res.status(200).json({ connections: others })
+    return res.status(200).json({
+      connections: others,
+      trustedContacts: (me.trustedContacts || []).map((id) => String(id)),
+    })
   } catch (error) {
     console.error("Error fetching connections:", error)
+    return res.status(500).json({ message: "Internal server error" })
+  }
+}
+
+export const removeTrustedContact = async (req, res) => {
+  try {
+    const clerkUserId = req.auth?.sub || req.auth?.userId
+    const me = await User.findOne({ clerkUserId })
+    if (!me) return res.status(404).json({ message: "User not found" })
+
+    const otherId = req.params.id
+    if (!mongoose.Types.ObjectId.isValid(otherId)) {
+      return res.status(400).json({ message: "Invalid user id" })
+    }
+
+    me.trustedContacts = (me.trustedContacts || []).filter(
+      (id) => String(id) !== String(otherId)
+    )
+    await me.save()
+
+    return res.status(200).json({
+      trustedContacts: (me.trustedContacts || []).map((id) => String(id)),
+    })
+  } catch (error) {
+    console.error("Error removing trusted contact:", error)
     return res.status(500).json({ message: "Internal server error" })
   }
 }
