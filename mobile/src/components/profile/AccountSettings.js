@@ -2,7 +2,6 @@ import { useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  Linking,
   Pressable,
   ScrollView,
   Text,
@@ -70,20 +69,6 @@ export default function AccountSettingsView({ onBack, user, getToken }) {
   const handleDiscard = () => {
     setFullName(initialName);
     setPhone(initialPhone);
-  };
-
-  const handleChangePassword = () => {
-    Alert.alert(
-      "Change Password",
-      "You'll be taken to a secure page to change your password.",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Continue",
-          onPress: () => Linking.openURL("https://accounts.pinley.app/user/security"),
-        },
-      ]
-    );
   };
 
   const confirmDeleteAccount = async () => {
@@ -175,9 +160,7 @@ export default function AccountSettingsView({ onBack, user, getToken }) {
               </Text>
             </View>
           </View>
-          <Divider />
-          <NavRow label="Change Password" icon="key" iconBg="bg-slate-800" onPress={handleChangePassword} last />
-        </View>
+          </View>
 
         <SectionLabel>Danger Zone</SectionLabel>
         <View className="rounded-2xl border border-red-100 bg-red-50/40 px-4">

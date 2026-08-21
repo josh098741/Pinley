@@ -1,4 +1,5 @@
 import { ActivityIndicator, Alert, ScrollView, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { NavHeader, SectionLabel, Divider, ToggleRow, NavRow, RadioCard, AMBER, PURPLE } from "./common";
 import { useProfilePrefs } from "../../hooks/useProfilePrefs";
 
@@ -9,6 +10,7 @@ const VISIBILITY_OPTIONS = [
 ];
 
 export default function PrivacySafetyView({ onBack, user }) {
+  const insets = useSafeAreaInsets();
   const { prefs, save, saving } = useProfilePrefs(user);
   const privacy = prefs.privacy;
 
@@ -37,7 +39,7 @@ export default function PrivacySafetyView({ onBack, user }) {
       <ScrollView
         className="flex-1 px-6 pt-2"
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 60 }}
+        contentContainerStyle={{ paddingBottom: 110 + insets.bottom }}
       >
         <SectionLabel>Who Can Find You</SectionLabel>
         {VISIBILITY_OPTIONS.map((opt) => (
