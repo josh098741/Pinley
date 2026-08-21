@@ -3,23 +3,17 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useMap } from "../context/MapContext";
-
-const PURPLE = "#7C3AED";
-const PURPLE_DEEP = "#5B21B6";
-const PURPLE_BRIGHT = "#8B5CF6";
+import { useTheme } from "../theme/ThemeProvider";
 
 function PanelButton({ icon, label, onPress, active }) {
+  const { accent } = useTheme();
   return (
     <Pressable
       onPress={onPress}
       style={({ pressed }) => [styles.action, pressed && styles.actionPressed]}
     >
-      <View style={[styles.actionIconWrap, active && styles.actionIconWrapActive]}>
-        <Ionicons
-          name={icon}
-          size={20}
-          color="#FFFFFF"
-        />
+      <View style={[styles.actionIconWrap, { backgroundColor: accent.light }]}>
+        <Ionicons name={icon} size={20} color="#FFFFFF" />
       </View>
       <View style={styles.actionLabelWrap}>
         <Text style={[styles.actionLabel, active && styles.actionLabelActive]}>
@@ -34,6 +28,7 @@ export function SidePanel() {
   const [open, setOpen] = useState(false);
   const { recenter } = useMap();
   const router = useRouter();
+  const { accent } = useTheme();
 
   const handleToggle = () => {
     setOpen((prev) => !prev);
@@ -42,14 +37,20 @@ export function SidePanel() {
   return (
     <View style={styles.anchor} pointerEvents="box-none">
       <View style={styles.panel}>
-        <View style={styles.strip} />
+        <View style={[styles.strip, { backgroundColor: accent.deep }]} />
         <Pressable
           onPress={handleToggle}
           hitSlop={16}
           style={({ pressed }) => [
             styles.handle,
+            {
+              backgroundColor: accent.primary,
+              borderLeftColor: accent.deep,
+              shadowColor: accent.deep,
+            },
             open && styles.handleOpen,
             pressed && styles.handlePressed,
+            pressed && { backgroundColor: accent.deep },
           ]}
           accessibilityRole="button"
           accessibilityLabel={open ? "Close panel" : "Open panel"}
@@ -57,37 +58,17 @@ export function SidePanel() {
           <Ionicons
             name={open ? "chevron-forward" : "chevron-back"}
             size={22}
-            color={PURPLE}
+            color={accent.primary}
           />
         </Pressable>
 
         {open ? (
-          <View style={styles.actions}>
-            <PanelButton
-              icon="locate"
-              label="Locate"
-              onPress={() => recenter()}
-            />
-            <PanelButton
-              icon="people"
-              label="Friends"
-              onPress={() => console.log("Friends")}
-            />
-            <PanelButton
-              icon="calendar"
-              label="Events"
-              onPress={() => router.push("/events")}
-            />
-            <PanelButton
-              icon="warning"
-              label="SOS"
-              onPress={() => router.push("/sos/sos")}
-            />
-            <PanelButton
-              icon="settings"
-              label="Settings"
-              onPress={() => console.log("Settings")}
-            />
+          <View style={[styles.actions, { backgroundColor: accent.deep, shadowColor: accent.deep }]}>
+            <PanelButton icon="locate" label="Locate" onPress={() => recenter()} />
+            <PanelButton icon="people" label="Friends" onPress={() => console.log("Friends")} />
+            <PanelButton icon="calendar" label="Events" onPress={() => router.push("/events")} />
+            <PanelButton icon="warning" label="SOS" onPress={() => router.push("/sos/sos")} />
+            <PanelButton icon="settings" label="Settings" onPress={() => console.log("Settings")} />
           </View>
         ) : null}
       </View>
@@ -111,7 +92,6 @@ const styles = StyleSheet.create({
   strip: {
     width: 6,
     height: 72,
-    backgroundColor: PURPLE_DEEP,
     borderTopLeftRadius: 6,
     borderBottomLeftRadius: 6,
   },
@@ -122,13 +102,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     borderTopLeftRadius: 22,
     borderBottomLeftRadius: 22,
-    backgroundColor: PURPLE,
     borderWidth: 2,
     borderRightWidth: 0,
     borderLeftWidth: 8,
     borderColor: "#FFFFFF",
-    borderLeftColor: PURPLE_DEEP,
-    shadowColor: PURPLE_DEEP,
     shadowOpacity: 0.55,
     shadowRadius: 14,
     shadowOffset: { width: -3, height: 6 },
@@ -141,7 +118,6 @@ const styles = StyleSheet.create({
   },
   handlePressed: {
     transform: [{ scale: 0.94 }],
-    backgroundColor: PURPLE_DEEP,
   },
   actions: {
     flexDirection: "column",
@@ -151,11 +127,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     borderTopLeftRadius: 24,
     borderBottomLeftRadius: 24,
-    backgroundColor: PURPLE_DEEP,
     borderWidth: 2,
     borderRightWidth: 0,
     borderColor: "#FFFFFF",
-    shadowColor: PURPLE_DEEP,
     shadowOpacity: 0.4,
     shadowRadius: 18,
     shadowOffset: { width: -4, height: 10 },
@@ -175,13 +149,8 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: PURPLE_BRIGHT,
     borderWidth: 1.5,
     borderColor: "rgba(255,255,255,0.6)",
-  },
-  actionIconWrapActive: {
-    backgroundColor: "#FFFFFF",
-    borderColor: "#FFFFFF",
   },
   actionLabelWrap: {
     marginTop: 4,

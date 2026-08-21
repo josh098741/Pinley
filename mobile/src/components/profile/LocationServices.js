@@ -11,34 +11,34 @@ import {
   View,
 } from "react-native";
 import * as Location from "expo-location";
-import { NavHeader, SectionLabel, Divider, LoadingScreen, BLUE, GREEN, RED, SLATE_400, PURPLE } from "./common";
+import { NavHeader, SectionLabel, Divider, LoadingScreen, BLUE, GREEN, RED, SLATE_400 } from "./common";
 import { useProfilePrefs } from "../../hooks/useProfilePrefs";
+import { useTheme } from "../../theme/ThemeProvider";
 
 const LOCATION_STATUS_META = {
-  granted_always: { label: "Always", color: GREEN, bg: "bg-emerald-50" },
-  granted_foreground: { label: "While Using App", color: BLUE, bg: "bg-blue-50" },
-  denied: { label: "Denied", color: RED, bg: "bg-red-50" },
-  undetermined: { label: "Not Set", color: SLATE_400, bg: "bg-slate-100" },
+  granted_always: { label: "Always", color: GREEN, bg: "rgba(5,150,105,0.12)" },
+  granted_foreground: { label: "While Using App", color: BLUE, bg: "rgba(37,99,235,0.12)" },
+  denied: { label: "Denied", color: RED, bg: "rgba(225,29,72,0.12)" },
+  undetermined: { label: "Not Set", color: SLATE_400, bg: "rgba(148,163,184,0.16)" },
 };
 
 function LocationStatusRow({ label, statusKey, actionLabel, onAction, busy }) {
+  const { colors } = useTheme();
   const meta = LOCATION_STATUS_META[statusKey] || LOCATION_STATUS_META.undetermined;
   return (
-    <View className="flex-row items-center justify-between py-4">
-      <View className="flex-1 pr-4">
-        <Text className="text-[15px] font-semibold text-slate-900">{label}</Text>
-        <View className={`mt-1.5 self-start rounded-full px-2.5 py-1 ${meta.bg}`}>
-          <Text style={{ color: meta.color }} className="text-[11px] font-bold">
-            {meta.label}
-          </Text>
+    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: 16 }}>
+      <View style={{ flex: 1, paddingRight: 16 }}>
+        <Text style={{ fontSize: 15, fontWeight: "600", color: colors.text }}>{label}</Text>
+        <View style={{ marginTop: 6, alignSelf: "flex-start", borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4, backgroundColor: meta.bg }}>
+          <Text style={{ color: meta.color, fontSize: 11, fontWeight: "700" }}>{meta.label}</Text>
         </View>
       </View>
       {actionLabel ? (
-        <Pressable onPress={onAction} disabled={busy} className="rounded-full bg-slate-900 px-4 py-2.5">
+        <Pressable onPress={onAction} disabled={busy} style={{ borderRadius: 999, backgroundColor: "#0f172a", paddingHorizontal: 16, paddingVertical: 10 }}>
           {busy ? (
             <ActivityIndicator size="small" color="#fff" />
           ) : (
-            <Text className="text-[13px] font-bold text-white">{actionLabel}</Text>
+            <Text style={{ fontSize: 13, fontWeight: "700", color: "#fff" }}>{actionLabel}</Text>
           )}
         </Pressable>
       ) : null}
@@ -57,6 +57,7 @@ export default function LocationServicesView({ onBack, user }) {
   const [busyBg, setBusyBg] = useState(false);
   const [savingToggle, setSavingToggle] = useState(false);
   const [loading, setLoading] = useState(true);
+  const { colors, accent } = useTheme();
 
   const refreshPermissions = useCallback(async () => {
     const fg = await Location.getForegroundPermissionsAsync();
@@ -135,7 +136,7 @@ export default function LocationServicesView({ onBack, user }) {
   }
 
   return (
-    <View className="flex-1 bg-white">
+    <View style={{ flex: 1, backgroundColor: colors.bg }}>
       <NavHeader title="Location Services" onBack={onBack} />
 
       <ScrollView
@@ -143,17 +144,17 @@ export default function LocationServicesView({ onBack, user }) {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 120 }}
       >
-        <View className="flex-row items-center justify-between rounded-2xl bg-slate-50 px-4 py-4">
-          <View className="flex-1 pr-4">
-            <Text className="text-[15px] font-bold text-slate-900">Share My Location</Text>
-            <Text className="mt-1 text-[13px] text-slate-500">
+        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", borderRadius: 16, backgroundColor: colors.soft, paddingHorizontal: 16, paddingVertical: 16 }}>
+          <View style={{ flex: 1, paddingRight: 16 }}>
+            <Text style={{ fontSize: 15, fontWeight: "700", color: colors.text }}>Share My Location</Text>
+            <Text style={{ marginTop: 4, fontSize: 13, color: colors.textMuted }}>
               Friends in your circles can see where you are
             </Text>
           </View>
           {savingToggle ? (
-            <ActivityIndicator size="small" color={PURPLE} />
+            <ActivityIndicator size="small" color={accent.primary} />
           ) : (
-            <Switch value={sharingEnabled} onValueChange={toggleSharing} trackColor={{ true: PURPLE }} />
+            <Switch value={sharingEnabled} onValueChange={toggleSharing} trackColor={{ true: accent.primary }} />
           )}
         </View>
 
@@ -181,7 +182,7 @@ export default function LocationServicesView({ onBack, user }) {
           busy={busyBg}
         />
 
-        <Text className="mt-6 mb-10 text-[13px] leading-5 text-slate-400">
+        <Text style={{ marginTop: 24, marginBottom: 40, fontSize: 13, lineHeight: 20, color: colors.textFaint }}>
           “Always” access lets Pinley keep sharing your live location with friends even when the
           app is closed. You can turn this off anytime.
         </Text>

@@ -4,7 +4,7 @@ import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { BlurView } from "expo-blur";
-import { clay } from "../../../components/clay";
+import { useClay, useTheme } from "../../../theme/ThemeProvider";
 
 const SOS_BACKGROUND = require("../../../../assets/images/emergency_sos.png");
 
@@ -34,10 +34,15 @@ const STEPS = [
 
 export default function SOS() {
   const router = useRouter();
+  const clay = useClay();
+  const { isDark } = useTheme();
 
   return (
-    <SafeAreaView className="flex-1" style={{ backgroundColor: clay.bg }}>
-      <StatusBar barStyle="dark-content" backgroundColor={clay.bg} />
+      <SafeAreaView className="flex-1" style={{ backgroundColor: clay.bg }}>
+        <StatusBar
+          barStyle={isDark ? "light-content" : "dark-content"}
+          backgroundColor={clay.bg}
+        />
 
       <View className="flex-1 px-5">
         {/* Back button + Header */}

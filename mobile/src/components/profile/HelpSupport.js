@@ -12,6 +12,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { NavHeader, SectionLabel, Divider, NavRow } from "./common";
 import { apiRequest } from "../../utils/api";
+import { useTheme } from "../../theme/ThemeProvider";
 
 const FAQ_ITEMS = [
   {
@@ -37,14 +38,15 @@ const FAQ_ITEMS = [
 ];
 
 function FaqRow({ item, expanded, onToggle }) {
+  const { colors } = useTheme();
   return (
     <View>
-      <Pressable onPress={onToggle} className="flex-row items-center justify-between py-4">
-        <Text className="flex-1 pr-3 text-[15px] font-semibold text-slate-900">{item.q}</Text>
-        <Ionicons name={expanded ? "remove" : "add"} size={18} color="#475569" />
+      <Pressable onPress={onToggle} style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: 16 }}>
+        <Text style={{ flex: 1, paddingRight: 12, fontSize: 15, fontWeight: "600", color: colors.text }}>{item.q}</Text>
+        <Ionicons name={expanded ? "remove" : "add"} size={18} color={colors.textMuted} />
       </Pressable>
       {expanded ? (
-        <Text className="pb-4 text-[13px] leading-5 text-slate-500">{item.a}</Text>
+        <Text style={{ paddingBottom: 16, fontSize: 13, lineHeight: 20, color: colors.textMuted }}>{item.a}</Text>
       ) : null}
       <Divider />
     </View>
@@ -55,6 +57,7 @@ export default function HelpSupportView({ onBack, user, getToken }) {
   const [expandedIdx, setExpandedIdx] = useState(null);
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
+  const { colors } = useTheme();
 
   const handleSubmitTicket = async () => {
     if (!message.trim()) {
@@ -86,8 +89,16 @@ export default function HelpSupportView({ onBack, user, getToken }) {
     Linking.openURL("mailto:support@pinley.app?subject=Pinley%20Support");
   };
 
+  const cardStyle = {
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: 16,
+    backgroundColor: colors.card,
+  };
+
   return (
-    <View className="flex-1 bg-white">
+    <View style={{ flex: 1, backgroundColor: colors.bg }}>
       <NavHeader title="Help & Support" onBack={onBack} />
       <ScrollView
         className="flex-1 px-6 pt-2"
@@ -95,7 +106,7 @@ export default function HelpSupportView({ onBack, user, getToken }) {
         contentContainerStyle={{ paddingBottom: 60 }}
       >
         <SectionLabel>Frequently Asked</SectionLabel>
-        <View>
+        <View style={cardStyle}>
           {FAQ_ITEMS.map((item, idx) => (
             <FaqRow
               key={item.q}
@@ -107,28 +118,45 @@ export default function HelpSupportView({ onBack, user, getToken }) {
         </View>
 
         <SectionLabel>Contact Us</SectionLabel>
-        <View className="rounded-2xl border border-slate-200 px-4 py-4">
-          <Text className="mb-2 text-[12px] font-bold text-slate-400">Describe your issue</Text>
+        <View style={{ ...cardStyle, paddingVertical: 16 }}>
+          <Text style={{ marginBottom: 8, fontSize: 12, fontWeight: "700", color: colors.textFaint }}>Describe your issue</Text>
           <TextInput
             value={message}
             onChangeText={setMessage}
             placeholder="What's going on?"
+            placeholderTextColor={colors.textFaint}
             multiline
             numberOfLines={4}
-            className="min-h-[90px] rounded-xl bg-slate-50 p-3 text-[14px] text-slate-900"
             textAlignVertical="top"
+            style={{
+              minHeight: 90,
+              borderRadius: 12,
+              backgroundColor: colors.soft,
+              padding: 12,
+              fontSize: 14,
+              color: colors.text,
+            }}
           />
           <Pressable
             onPress={handleSubmitTicket}
             disabled={sending}
-            className="mt-3 flex-row items-center justify-center gap-2 rounded-full bg-slate-900 py-3"
+            style={{
+              marginTop: 12,
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 8,
+              borderRadius: 999,
+              backgroundColor: "#0f172a",
+              paddingVertical: 12,
+            }}
           >
             {sending ? <ActivityIndicator size="small" color="#fff" /> : null}
-            <Text className="text-[13px] font-bold text-white">{sending ? "Sending…" : "Submit"}</Text>
+            <Text style={{ fontSize: 13, fontWeight: "700", color: "#fff" }}>{sending ? "Sending…" : "Submit"}</Text>
           </Pressable>
         </View>
 
-        <View className="mt-4 rounded-2xl border border-slate-200 px-4">
+        <View style={{ marginTop: 16, ...cardStyle }}>
           <NavRow
             icon="mail"
             iconBg="bg-blue-600"

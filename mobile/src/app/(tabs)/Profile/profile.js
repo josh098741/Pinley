@@ -7,6 +7,7 @@ import { ProfileHeader } from "../../../components/profile/ProfileHeader";
 import { NavRow } from "../../../components/profile/common";
 import { apiRequest } from "../../../utils/api";
 import { formatPinCode } from "../../../utils/pincode";
+import { useTheme } from "../../../theme/ThemeProvider";
 
 import LocationServicesView from "../../../components/profile/LocationServices";
 import AccountSettingsView from "../../../components/profile/AccountSettings";
@@ -42,6 +43,7 @@ export default function Profile() {
   const [pinCode, setPinCode] = useState(null);
   const [copying, setCopying] = useState(false);
   const [view, setView] = useState(VIEWS.PROFILE);
+  const { colors } = useTheme();
 
   useEffect(() => {
     let cancelled = false;
@@ -110,8 +112,8 @@ export default function Profile() {
   }
 
   return (
-    <View className="flex-1 bg-white">
-      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+    <View style={{ flex: 1, backgroundColor: colors.bg }}>
+      <StatusBar barStyle={colors.statusBar} backgroundColor="transparent" translucent />
 
       <ScrollView
         className="flex-1"
@@ -128,8 +130,7 @@ export default function Profile() {
 
         <SafeAreaView
           edges={["bottom"]}
-          className="flex-1 rounded-t-[28px] bg-white"
-          style={{ marginTop: -32 }}
+          style={{ flex: 1, backgroundColor: colors.card, marginTop: -32, borderTopLeftRadius: 28, borderTopRightRadius: 28 }}
         >
           <View className="px-6 pt-6">
             <View className="mb-10 flex-1">

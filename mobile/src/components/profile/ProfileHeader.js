@@ -2,7 +2,7 @@ import { ActivityIndicator, Image, Pressable, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { formatPinCode } from "../../utils/pincode";
-import { PURPLE } from "./common";
+import { useTheme } from "../../theme/ThemeProvider";
 
 function PinCodeSection({ pinCode, copying, copyCode }) {
   return (
@@ -45,11 +45,12 @@ function PinCodeSection({ pinCode, copying, copyCode }) {
 
 export function ProfileHeader({ user, pinCode, copying, copyCode, onHelp }) {
   const insets = useSafeAreaInsets();
+  const { accent } = useTheme();
 
   return (
     <View
       style={{
-        backgroundColor: PURPLE,
+        backgroundColor: accent.primary,
         paddingTop: insets.top + 12,
         paddingHorizontal: 24,
         paddingBottom: 36,
@@ -84,7 +85,7 @@ export function ProfileHeader({ user, pinCode, copying, copyCode, onHelp }) {
               className="absolute -bottom-1 -right-1 items-center justify-center rounded-full bg-white"
               style={{ width: 22, height: 22 }}
             >
-              <Ionicons name="camera" size={12} color={PURPLE} />
+              <Ionicons name="camera" size={12} color={accent.primary} />
             </View>
           </View>
           <View>

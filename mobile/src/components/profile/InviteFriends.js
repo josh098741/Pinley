@@ -10,15 +10,17 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
-import { NavHeader, SectionLabel, PURPLE } from "./common";
+import { NavHeader, SectionLabel } from "./common";
 import { apiRequest } from "../../utils/api";
 import { formatPinCode } from "../../utils/pincode";
+import { useTheme } from "../../theme/ThemeProvider";
 
 export default function InviteFriendsView({ onBack, pinCode, getToken }) {
   const [loading, setLoading] = useState(true);
   const [inviteCount, setInviteCount] = useState(0);
   const [copying, setCopying] = useState(false);
   const [sharing, setSharing] = useState(false);
+  const { colors, accent } = useTheme();
 
   useEffect(() => {
     let cancelled = false;
@@ -65,14 +67,14 @@ export default function InviteFriendsView({ onBack, pinCode, getToken }) {
   };
 
   return (
-    <View className="flex-1 bg-white">
+    <View style={{ flex: 1, backgroundColor: colors.bg }}>
       <NavHeader title="Invite Friends" onBack={onBack} />
       <ScrollView
         className="flex-1 px-6 pt-2"
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 60 }}
       >
-        <View style={{ backgroundColor: PURPLE }} className="items-center rounded-3xl px-6 py-8">
+        <View style={{ backgroundColor: accent.primary }} className="items-center rounded-3xl px-6 py-8">
           <View className="mb-4 h-14 w-14 items-center justify-center rounded-full bg-white/20">
             <Ionicons name="people" size={26} color="#fff" />
           </View>
@@ -107,31 +109,40 @@ export default function InviteFriendsView({ onBack, pinCode, getToken }) {
             className="mt-5 w-full flex-row items-center justify-center gap-2 rounded-full bg-white py-3.5"
           >
             {sharing ? (
-              <ActivityIndicator size="small" color={PURPLE} />
+              <ActivityIndicator size="small" color={accent.primary} />
             ) : (
-              <Ionicons name="share-social" size={16} color={PURPLE} />
+              <Ionicons name="share-social" size={16} color={accent.primary} />
             )}
-            <Text style={{ color: PURPLE }} className="text-[14px] font-bold">
+            <Text style={{ color: accent.primary }} className="text-[14px] font-bold">
               Share Invite
             </Text>
           </Pressable>
         </View>
 
         <SectionLabel>Your Impact</SectionLabel>
-        <View className="rounded-2xl border border-slate-200 px-4 py-4">
+        <View
+          style={{
+            borderRadius: 16,
+            borderWidth: 1,
+            borderColor: colors.border,
+            paddingHorizontal: 16,
+            paddingVertical: 16,
+            backgroundColor: colors.card,
+          }}
+        >
           {loading ? (
-            <ActivityIndicator color={PURPLE} />
+            <ActivityIndicator color={accent.primary} />
           ) : (
             <>
-              <Text className="text-[28px] font-extrabold text-slate-900">{inviteCount}</Text>
-              <Text className="mt-0.5 text-[13px] text-slate-500">
+              <Text style={{ fontSize: 28, fontWeight: "800", color: colors.text }}>{inviteCount}</Text>
+              <Text style={{ marginTop: 2, fontSize: 13, color: colors.textMuted }}>
                 {inviteCount === 1 ? "friend joined" : "friends joined"} using your invite
               </Text>
             </>
           )}
         </View>
 
-        <Text className="mt-6 text-[13px] leading-5 text-slate-400">
+        <Text style={{ marginTop: 24, fontSize: 13, lineHeight: 20, color: colors.textFaint }}>
           When someone joins Pinley using your PinCode or invite link, they’re automatically added
           to your requests so you can start sharing your circle right away.
         </Text>

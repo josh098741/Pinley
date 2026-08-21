@@ -8,12 +8,14 @@ import {
   ClayButton,
   ClayCard,
   EmptyState,
-  clay,
+  useClay,
   displayName,
 } from "../../../components/clay";
+import { useTheme } from "../../../theme/ThemeProvider";
 import { formatPinCode } from "../../../utils/pincode";
 
 function FriendCard({ person, trusted, pending, onAdd, onRemove }) {
+  const clay = useClay();
   return (
     <ClayCard style={{ marginBottom: 12 }}>
       <View className="flex-row items-center gap-4">
@@ -95,6 +97,8 @@ export default function TrustedContacts() {
     sendRequest,
     removeTrustedContact,
   } = useRequests();
+  const clay = useClay();
+  const { isDark } = useTheme();
 
   const trustedSet = new Set((trustedContacts || []).map(String));
   const pendingTrustSet = new Set(
@@ -124,8 +128,11 @@ export default function TrustedContacts() {
   };
 
   return (
-    <SafeAreaView className="flex-1" style={{ backgroundColor: clay.bg }}>
-      <StatusBar barStyle="dark-content" backgroundColor={clay.bg} />
+      <SafeAreaView className="flex-1" style={{ backgroundColor: clay.bg }}>
+        <StatusBar
+          barStyle={isDark ? "light-content" : "dark-content"}
+          backgroundColor={clay.bg}
+        />
 
       <View className="flex-1 px-5">
         {/* Header */}

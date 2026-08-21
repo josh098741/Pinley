@@ -11,13 +11,14 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { ClayCard, SectionTitle, clay } from "../../../components/clay";
+import { ClayCard, SectionTitle, useClay } from "../../../components/clay";
+import { useTheme } from "../../../theme/ThemeProvider";
 import { useEvents } from "../../../context/EventsContext";
 
-const CARD_BORDER = {
+const CARD_BORDER = (clay) => ({
   borderWidth: 2,
   borderColor: clay.primary,
-};
+});
 
 const TONE_BY_STATUS = {
   going: "success",
@@ -46,8 +47,9 @@ function Sparkle({ top, left, size = 8, opacity = 0.5 }) {
 }
 
 function HeroBanner({ onLearnMore }) {
+  const clay = useClay();
   return (
-    <ClayCard style={{ marginTop: 16, padding: 0, overflow: "hidden", ...CARD_BORDER }}>
+    <ClayCard style={{ marginTop: 16, padding: 0, overflow: "hidden", ...CARD_BORDER(clay) }}>
       <View
         className="flex-row items-center px-5 py-5"
         style={{ backgroundColor: clay.primarySoft, borderRadius: 24 }}
@@ -100,6 +102,7 @@ function HeroBanner({ onLearnMore }) {
 }
 
 function DateBadge({ event }) {
+  const clay = useClay();
   const month = (event.month || "").slice(0, 3).toUpperCase();
   const day = event.day || "—";
 
@@ -131,6 +134,7 @@ function DateBadge({ event }) {
 }
 
 function AvatarStack({ attendees = 0 }) {
+  const clay = useClay();
   const shown = Math.min(attendees, 3);
 
   return (
@@ -156,11 +160,12 @@ function AvatarStack({ attendees = 0 }) {
 }
 
 function EventCard({ event, onPress }) {
+  const clay = useClay();
   const tone = TONE_BY_STATUS[event.status] || "muted";
   const statusLabel = STATUS_LABEL[event.status] || "View";
 
   return (
-    <ClayCard style={{ marginTop: 12, ...CARD_BORDER }} onPress={onPress}>
+    <ClayCard style={{ marginTop: 12, ...CARD_BORDER(clay) }} onPress={onPress}>
       <View className="flex-row items-start">
         <DateBadge event={event} />
 
@@ -244,6 +249,7 @@ const EMPTY_FEATURES = [
 ];
 
 function FeatureCard({ icon, title, subtitle, divider }) {
+  const clay = useClay();
   return (
     <View
       style={{
@@ -296,9 +302,10 @@ function FeatureCard({ icon, title, subtitle, divider }) {
 }
 
 function EventsEmptyState({ onCreatePress }) {
+  const clay = useClay();
   return (
     <View className="mt-3">
-      <ClayCard style={CARD_BORDER}>
+      <ClayCard style={CARD_BORDER(clay)}>
         <View className="items-center py-2">
           <View
             className="items-center justify-center rounded-2xl"
@@ -347,8 +354,9 @@ function EventsEmptyState({ onCreatePress }) {
 }
 
 function CreateEventBanner({ onPress }) {
+  const clay = useClay();
   return (
-    <ClayCard style={{ padding: 0, overflow: "hidden", ...CARD_BORDER }} onPress={onPress}>
+    <ClayCard style={{ padding: 0, overflow: "hidden", ...CARD_BORDER(clay) }} onPress={onPress}>
       <LinearGradient
         colors={[clay.primary, clay.primaryDeep]}
         start={{ x: 0, y: 0 }}
@@ -413,10 +421,15 @@ function CreateEventBanner({ onPress }) {
 export default function Events() {
   const router = useRouter();
   const { events, loading } = useEvents();
+  const clay = useClay();
+  const { isDark } = useTheme();
 
   return (
-    <SafeAreaView className="flex-1" style={{ backgroundColor: clay.bg }}>
-      <StatusBar barStyle="dark-content" backgroundColor={clay.bg} />
+      <SafeAreaView className="flex-1" style={{ backgroundColor: clay.bg }}>
+        <StatusBar
+          barStyle={isDark ? "light-content" : "dark-content"}
+          backgroundColor={clay.bg}
+        />
 
       <View className="flex-1 px-5">
         {/* Back button + Header */}

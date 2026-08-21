@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { ActivityIndicator, Alert, ScrollView, Text, View } from "react-native";
-import { NavHeader, SelectRow, PURPLE } from "./common";
+import { NavHeader, SelectRow } from "./common";
 import { useProfilePrefs } from "../../hooks/useProfilePrefs";
+import { useTheme } from "../../theme/ThemeProvider";
 
 const LANGUAGES = [
   { code: "en", label: "English", native: "English" },
@@ -9,13 +10,14 @@ const LANGUAGES = [
   { code: "fr", label: "French", native: "Français" },
   { code: "am", label: "Amharic", native: "አማርኛ" },
   { code: "ha", label: "Hausa", native: "Hausa" },
-  { code: "yo", label: "Yoruba", native: "Yorùbá" },
+  { code: "yo", label: "Yoruba", native: "Yòrúbá" },
   { code: "zu", label: "Zulu", native: "isiZulu" },
   { code: "ar", label: "Arabic", native: "العربية" },
 ];
 
 export default function LanguageView({ onBack, user }) {
   const { prefs, save } = useProfilePrefs(user);
+  const { colors, accent } = useTheme();
   const [saving, setSaving] = useState(false);
   const selected = prefs.language || "en";
 
@@ -27,18 +29,30 @@ export default function LanguageView({ onBack, user }) {
   };
 
   return (
-    <View className="flex-1 bg-white">
-      <NavHeader title="Language" onBack={onBack} right={saving ? <ActivityIndicator size="small" color={PURPLE} /> : null} />
+    <View style={{ flex: 1, backgroundColor: colors.bg }}>
+      <NavHeader
+        title="Language"
+        onBack={onBack}
+        right={saving ? <ActivityIndicator size="small" color={accent.primary} /> : null}
+      />
       <ScrollView
         className="flex-1 px-6 pt-2"
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 60 }}
       >
-        <Text className="mb-4 text-[13px] leading-5 text-slate-500">
+        <Text style={{ marginBottom: 16, fontSize: 13, lineHeight: 20, color: colors.textMuted }}>
           Choose the language used throughout Pinley. Some content may still appear in English while
           translations are being finished.
         </Text>
-        <View className="rounded-2xl border border-slate-200 px-4">
+        <View
+          style={{
+            borderRadius: 16,
+            borderWidth: 1,
+            borderColor: colors.border,
+            paddingHorizontal: 16,
+            backgroundColor: colors.card,
+          }}
+        >
           {LANGUAGES.map((lang, idx) => (
             <SelectRow
               key={lang.code}

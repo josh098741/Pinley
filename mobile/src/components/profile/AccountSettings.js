@@ -10,9 +10,10 @@ import {
 } from "react-native";
 import { useClerk } from "@clerk/clerk-expo";
 import { Ionicons } from "@expo/vector-icons";
-import { NavHeader, SectionLabel, Divider, NavRow, SaveBar, GREEN, AMBER, RED } from "./common";
+import { NavHeader, SectionLabel, Divider, SaveBar, GREEN, AMBER, RED } from "./common";
 import { useProfilePrefs } from "../../hooks/useProfilePrefs";
 import { apiRequest } from "../../utils/api";
+import { useTheme } from "../../theme/ThemeProvider";
 
 const PHONE_INPUT_FILTER = /[^\d+\-()\s.]/g;
 const PHONE_E164 = /^\+?[1-9]\d{6,14}$/;
@@ -26,6 +27,7 @@ const isValidPhone = (raw) => {
 export default function AccountSettingsView({ onBack, user, getToken }) {
   const { signOut } = useClerk();
   const { prefs, save } = useProfilePrefs(user);
+  const { colors } = useTheme();
 
   const initialName = user?.fullName || "";
   const initialPhone = prefs.account.phone || "";
@@ -98,8 +100,16 @@ export default function AccountSettingsView({ onBack, user, getToken }) {
     );
   };
 
+  const cardStyle = {
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: 16,
+    backgroundColor: colors.card,
+  };
+
   return (
-    <View className="flex-1 bg-white">
+    <View style={{ flex: 1, backgroundColor: colors.bg }}>
       <NavHeader title="Account Settings" onBack={onBack} />
       <ScrollView
         className="flex-1 px-6 pt-2"
@@ -107,28 +117,30 @@ export default function AccountSettingsView({ onBack, user, getToken }) {
         contentContainerStyle={{ paddingBottom: 220 }}
       >
         <SectionLabel>Personal Info</SectionLabel>
-        <View className="rounded-2xl border border-slate-200 px-4">
-          <View className="py-3.5">
-            <Text className="mb-1.5 text-[12px] font-bold text-slate-400">Full Name</Text>
+        <View style={cardStyle}>
+          <View style={{ paddingVertical: 14 }}>
+            <Text style={{ marginBottom: 6, fontSize: 12, fontWeight: "700", color: colors.textFaint }}>Full Name</Text>
             <TextInput
               value={fullName}
               onChangeText={setFullName}
               placeholder="Your name"
-              className="text-[15px] font-semibold text-slate-900"
+              placeholderTextColor={colors.textFaint}
+              style={{ fontSize: 15, fontWeight: "600", color: colors.text }}
             />
           </View>
           <Divider />
-          <View className="py-3.5">
-            <Text className="mb-1.5 text-[12px] font-bold text-slate-400">Phone Number</Text>
+          <View style={{ paddingVertical: 14 }}>
+            <Text style={{ marginBottom: 6, fontSize: 12, fontWeight: "700", color: colors.textFaint }}>Phone Number</Text>
             <TextInput
               value={phone}
               onChangeText={(text) => setPhone(sanitizePhone(text))}
               placeholder="+254 7XX XXX XXX"
               keyboardType="phone-pad"
-              className="text-[15px] font-semibold text-slate-900"
+              placeholderTextColor={colors.textFaint}
+              style={{ fontSize: 15, fontWeight: "600", color: colors.text }}
             />
             {phoneError ? (
-              <Text className="mt-1.5 text-[12px] font-medium text-red-500">
+              <Text style={{ marginTop: 6, fontSize: 12, fontWeight: "500", color: RED }}>
                 Enter a valid phone number (7-15 digits, optionally starting with +).
               </Text>
             ) : null}
@@ -136,16 +148,22 @@ export default function AccountSettingsView({ onBack, user, getToken }) {
         </View>
 
         <SectionLabel>Login</SectionLabel>
-        <View className="rounded-2xl border border-slate-200 px-4">
-          <View className="flex-row items-center justify-between py-3.5">
-            <View className="flex-1 pr-3">
-              <Text className="mb-1 text-[12px] font-bold text-slate-400">Email</Text>
-              <Text className="text-[15px] font-semibold text-slate-900">{email}</Text>
+        <View style={cardStyle}>
+          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: 14 }}>
+            <View style={{ flex: 1, paddingRight: 12 }}>
+              <Text style={{ marginBottom: 4, fontSize: 12, fontWeight: "700", color: colors.textFaint }}>Email</Text>
+              <Text style={{ fontSize: 15, fontWeight: "600", color: colors.text }}>{email}</Text>
             </View>
             <View
-              className={`flex-row items-center gap-1 rounded-full px-2.5 py-1 ${
-                emailVerified ? "bg-emerald-50" : "bg-amber-50"
-              }`}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 4,
+                borderRadius: 999,
+                paddingHorizontal: 10,
+                paddingVertical: 4,
+                backgroundColor: emailVerified ? "rgba(5,150,105,0.12)" : "rgba(217,119,6,0.12)",
+              }}
             >
               <Ionicons
                 name={emailVerified ? "checkmark-circle" : "alert-circle"}
@@ -153,29 +171,40 @@ export default function AccountSettingsView({ onBack, user, getToken }) {
                 color={emailVerified ? GREEN : AMBER}
               />
               <Text
-                style={{ color: emailVerified ? GREEN : AMBER }}
-                className="text-[11px] font-bold"
+                style={{ color: emailVerified ? GREEN : AMBER, fontSize: 11, fontWeight: "700" }}
               >
                 {emailVerified ? "Verified" : "Unverified"}
               </Text>
             </View>
           </View>
-          </View>
+        </View>
 
         <SectionLabel>Danger Zone</SectionLabel>
-        <View className="rounded-2xl border border-red-100 bg-red-50/40 px-4">
+        <View
+          style={{
+            borderRadius: 16,
+            borderWidth: 1,
+            borderColor: "rgba(225,29,72,0.25)",
+            backgroundColor: "rgba(225,29,72,0.06)",
+            paddingHorizontal: 16,
+          }}
+        >
           <Pressable
             onPress={handleDeleteAccount}
             disabled={deleting}
-            className="flex-row items-center justify-between py-4"
+            style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: 16 }}
           >
-            <View className="flex-1 pr-3">
-              <Text className="text-[15px] font-bold text-red-500">Delete Account</Text>
-              <Text className="mt-0.5 text-[13px] text-red-400">
+            <View style={{ flex: 1, paddingRight: 12 }}>
+              <Text style={{ fontSize: 15, fontWeight: "700", color: RED }}>Delete Account</Text>
+              <Text style={{ marginTop: 2, fontSize: 13, color: "rgba(225,29,72,0.8)" }}>
                 Permanently remove your account and data
               </Text>
             </View>
-            {deleting ? <ActivityIndicator size="small" color={RED} /> : <Ionicons name="trash" size={18} color={RED} />}
+            {deleting ? (
+              <ActivityIndicator size="small" color={RED} />
+            ) : (
+              <Ionicons name="trash" size={18} color={RED} />
+            )}
           </Pressable>
         </View>
       </ScrollView>

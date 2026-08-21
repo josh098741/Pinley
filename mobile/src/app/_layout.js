@@ -7,10 +7,23 @@ import * as WebBrowser from "expo-web-browser";
 import { RequestsProvider } from "../context/RequestsContext";
 import { MapProvider } from "../context/MapContext";
 import { EventsProvider } from "../context/EventsContext";
+import { StatusBar } from "react-native";
+import { ThemeProvider, useTheme } from "../theme/ThemeProvider";
 
 WebBrowser.maybeCompleteAuthSession();
 
 const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
+
+function StatusBarBridge() {
+  const { isDark } = useTheme();
+  return (
+    <StatusBar
+      barStyle={isDark ? "light-content" : "dark-content"}
+      backgroundColor="transparent"
+      translucent
+    />
+  );
+}
 
 export default function RootLayout() {
   return (
@@ -19,23 +32,26 @@ export default function RootLayout() {
         <RequestsProvider>
           <MapProvider>
             <EventsProvider>
-              <Stack
-                screenOptions={{
-                  headerShown: false,
-                }}
-              >
-                <Stack.Screen name="index" />
-                <Stack.Screen name="(tabs)" />
-                <Stack.Screen name="setup-check" />
-                <Stack.Screen
-                  name="request-search"
-                  options={{ presentation: "modal" }}
-                />
-                <Stack.Screen
-                  name="[...unmatched]"
-                  options={{ headerShown: false }}
-                />
-              </Stack>
+              <ThemeProvider>
+                <StatusBarBridge />
+                <Stack
+                  screenOptions={{
+                    headerShown: false,
+                  }}
+                >
+                  <Stack.Screen name="index" />
+                  <Stack.Screen name="(tabs)" />
+                  <Stack.Screen name="setup-check" />
+                  <Stack.Screen
+                    name="request-search"
+                    options={{ presentation: "modal" }}
+                  />
+                  <Stack.Screen
+                    name="[...unmatched]"
+                    options={{ headerShown: false }}
+                  />
+                </Stack>
+              </ThemeProvider>
             </EventsProvider>
           </MapProvider>
         </RequestsProvider>

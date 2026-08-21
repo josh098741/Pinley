@@ -1,26 +1,12 @@
 import { Image, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
+import { useClay } from "../theme/ThemeProvider";
 
-export const clay = {
-  bg: "#F7F5FF",
-  card: "#FFFFFF",
-  primary: "#7C3AED",
-  primaryDeep: "#5B21B6",
-  primarySoft: "#EDE9FE",
-  primaryBorder: "rgba(124,58,237,0.14)",
-  ink: "#1E1B2E",
-  muted: "#6C7280",
-  faint: "#A5A3B8",
-  line: "#EAE7F5",
-  success: "#059669",
-  successSoft: "#ECFDF5",
-  danger: "#E11D48",
-  dangerSoft: "#FFF1F2",
-  warning: "#B45309",
-};
+export { useClay };
 
 export function Avatar({ name, uri, size = 52, style }) {
+  const clay = useClay();
   const initials = (name || "?")
     .split(" ")
     .filter(Boolean)
@@ -33,7 +19,13 @@ export function Avatar({ name, uri, size = 52, style }) {
     <View
       style={[
         styles.avatar,
-        { width: size, height: size, borderRadius: size / 2 },
+        {
+          width: size,
+          height: size,
+          borderRadius: size / 2,
+          backgroundColor: clay.primarySoft,
+          borderColor: clay.primaryBorder,
+        },
         style,
       ]}
     >
@@ -43,7 +35,7 @@ export function Avatar({ name, uri, size = 52, style }) {
           style={{ width: size, height: size, borderRadius: size / 2 }}
         />
       ) : (
-        <Text style={[styles.avatarInitials, { fontSize: size * 0.36 }]}>
+        <Text style={[styles.avatarInitials, { fontSize: size * 0.36, color: clay.primaryDeep }]}>
           {initials || "?"}
         </Text>
       )}
@@ -52,12 +44,18 @@ export function Avatar({ name, uri, size = 52, style }) {
 }
 
 export function ClayCard({ children, style, onPress }) {
+  const clay = useClay();
   const Comp = onPress ? Pressable : View;
   return (
     <Comp
       onPress={onPress}
       style={({ pressed }) => [
         styles.card,
+        {
+          backgroundColor: clay.card,
+          borderColor: clay.primaryBorder,
+          shadowColor: clay.primaryDeep,
+        },
         pressed && styles.cardPressed,
         style,
       ]}
@@ -77,6 +75,7 @@ export function ClayButton({
   style,
   compact,
 }) {
+  const clay = useClay();
   const content = (
     <View style={styles.buttonContent}>
       {icon ? (
@@ -96,7 +95,7 @@ export function ClayButton({
       >
         {loading ? "Please wait…" : label}
       </Text>
-    </View>
+      </View>
   );
 
   const innerBase = [
@@ -110,11 +109,7 @@ export function ClayButton({
   ];
 
   return (
-    <Pressable
-      onPress={onPress}
-      disabled={disabled || loading}
-      style={style}
-    >
+    <Pressable onPress={onPress} disabled={disabled || loading} style={style}>
       {({ pressed }) => {
         const squish = pressed && styles.buttonPressed;
         if (variant === "primary") {
@@ -136,18 +131,29 @@ export function ClayButton({
 }
 
 export function ClayInput({ style, ...props }) {
+  const clay = useClay();
   return (
     <TextInput
       placeholderTextColor={clay.faint}
-      style={[styles.input, style]}
+      style={[
+        styles.input,
+        {
+          backgroundColor: clay.isDark ? clay.soft : "#F4F1FE",
+          borderColor: clay.primaryBorder,
+          color: clay.ink,
+          shadowColor: clay.primaryDeep,
+        },
+        style,
+      ]}
       {...props}
     />
   );
 }
 
 export function ClayChip({ label, tone = "muted" }) {
+  const clay = useClay();
   const tones = {
-    muted: { bg: "#F1EFFB", color: "#6C7280" },
+    muted: { bg: clay.primarySoft, color: clay.muted },
     pending: { bg: "#FFF7ED", color: "#B45309" },
     success: { bg: clay.successSoft, color: clay.success },
     danger: { bg: clay.dangerSoft, color: clay.danger },
@@ -161,11 +167,12 @@ export function ClayChip({ label, tone = "muted" }) {
 }
 
 export function SectionTitle({ title, count }) {
+  const clay = useClay();
   return (
     <View style={styles.sectionTitleRow}>
-      <Text style={styles.sectionTitle}>{title}</Text>
+      <Text style={[styles.sectionTitle, { color: clay.ink }]}>{title}</Text>
       {count ? (
-        <View style={styles.sectionCount}>
+        <View style={[styles.sectionCount, { backgroundColor: clay.primary }]}>
           <Text style={styles.sectionCountText}>{count}</Text>
         </View>
       ) : null}
@@ -174,13 +181,14 @@ export function SectionTitle({ title, count }) {
 }
 
 export function EmptyState({ icon, title, subtitle }) {
+  const clay = useClay();
   return (
     <ClayCard style={styles.emptyCard}>
-      <View style={styles.emptyIconWrap}>
+      <View style={[styles.emptyIconWrap, { backgroundColor: clay.primarySoft, borderColor: clay.primaryBorder }]}>
         <Ionicons name={icon} size={26} color={clay.primary} />
       </View>
-      <Text style={styles.emptyTitle}>{title}</Text>
-      {subtitle ? <Text style={styles.emptySubtitle}>{subtitle}</Text> : null}
+      <Text style={[styles.emptyTitle, { color: clay.ink }]}>{title}</Text>
+      {subtitle ? <Text style={[styles.emptySubtitle, { color: clay.muted }]}>{subtitle}</Text> : null}
     </ClayCard>
   );
 }
@@ -196,12 +204,9 @@ export function displayName(user) {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: clay.card,
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: clay.primaryBorder,
     padding: 18,
-    shadowColor: clay.primaryDeep,
     shadowOpacity: 0.12,
     shadowRadius: 16,
     shadowOffset: { width: 0, height: 8 },
@@ -212,14 +217,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.06,
   },
   avatar: {
-    backgroundColor: clay.primarySoft,
     borderWidth: 1.5,
-    borderColor: "rgba(124,58,237,0.18)",
     alignItems: "center",
     justifyContent: "center",
   },
   avatarInitials: {
-    color: clay.primaryDeep,
     fontWeight: "800",
   },
   button: {
@@ -229,8 +231,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 22,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: clay.primarySoft,
-    shadowColor: clay.primaryDeep,
+    backgroundColor: "#EDE9FE",
     shadowOpacity: 0.1,
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 5 },
@@ -241,19 +242,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   buttonShadowPrimary: {
-    shadowColor: clay.primary,
     shadowOpacity: 0.35,
     shadowRadius: 14,
     shadowOffset: { width: 0, height: 8 },
     elevation: 6,
   },
   buttonSoft: {
-    backgroundColor: clay.primarySoft,
+    backgroundColor: "#EDE9FE",
   },
   buttonGhost: {
     backgroundColor: "#FFFFFF",
     borderWidth: 1.5,
-    borderColor: clay.primaryBorder,
     shadowOpacity: 0.05,
   },
   buttonDanger: {
@@ -276,7 +275,6 @@ const styles = StyleSheet.create({
     gap: 7,
   },
   buttonText: {
-    color: clay.primaryDeep,
     fontSize: 15,
     fontWeight: "700",
   },
@@ -287,18 +285,14 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
   },
   buttonTextDanger: {
-    color: clay.danger,
+    color: "#E11D48",
   },
   input: {
-    backgroundColor: "#F4F1FE",
     borderRadius: 22,
     borderWidth: 1.5,
-    borderColor: clay.primaryBorder,
     paddingHorizontal: 18,
     paddingVertical: 15,
     fontSize: 16,
-    color: clay.ink,
-    shadowColor: clay.primaryDeep,
     shadowOpacity: 0.06,
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 4 },
@@ -323,11 +317,9 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: "800",
-    color: clay.ink,
     letterSpacing: -0.2,
   },
   sectionCount: {
-    backgroundColor: clay.primary,
     borderRadius: 999,
     minWidth: 22,
     height: 22,
@@ -348,9 +340,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 20,
-    backgroundColor: clay.primarySoft,
     borderWidth: 1,
-    borderColor: clay.primaryBorder,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 12,
@@ -358,12 +348,10 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 15,
     fontWeight: "800",
-    color: clay.ink,
     marginBottom: 4,
   },
   emptySubtitle: {
     fontSize: 13,
-    color: clay.muted,
     textAlign: "center",
     lineHeight: 19,
     paddingHorizontal: 12,

@@ -19,18 +19,13 @@ import { LinearGradient } from "expo-linear-gradient";
 import {
   Avatar,
   ClayCard,
-  ClayChip,
   ClayButton,
-  clay,
+  useClay,
   displayName,
 } from "../../../components/clay";
+import { useTheme } from "../../../theme/ThemeProvider";
 
 import { useEvents } from "../../../context/EventsContext";
-
-const CARD_BORDER = {
-  borderWidth: 2,
-  borderColor: clay.primaryBorder,
-};
 
 const TONE_BY_STATUS = {
   going: "success",
@@ -65,6 +60,7 @@ function PressableRow({ onPress, children }) {
 /* ─── Header ─────────────────────────────────────────────────── */
 
 function Header({ onBack, onShare, onMore }) {
+  const clay = useClay();
   return (
     <View
       style={{
@@ -138,10 +134,11 @@ function Header({ onBack, onShare, onMore }) {
 /* ─── Hero card ──────────────────────────────────────────────── */
 
 function HeroCard({ event, statusLabel, tone }) {
+  const clay = useClay();
   const host = event?.host;
 
   return (
-    <ClayCard style={[CARD_BORDER, { overflow: "hidden", padding: 0, minHeight: 210, position: "relative", borderRadius: 28 }]}>
+    <ClayCard style={[{ borderWidth: 2, borderColor: clay.primaryBorder }, { overflow: "hidden", padding: 0, minHeight: 210, position: "relative", borderRadius: 28 }]}>
       {/* Background layers (clipped to rounded corners) */}
       <View
         style={{
@@ -305,15 +302,10 @@ function HeroCard({ event, statusLabel, tone }) {
   );
 }
 
-/* ─── Separator ──────────────────────────────────────────────── */
-
-function Separator() {
-  return <View style={{ height: 1, backgroundColor: clay.line, marginVertical: 2 }} />;
-}
-
 /* ─── Info row ───────────────────────────────────────────────── */
 
 function InfoRow({ icon, label, value }) {
+  const clay = useClay();
   return (
     <View style={{ flexDirection: "row", alignItems: "center", paddingVertical: 9, gap: 10 }}>
       <View
@@ -351,6 +343,7 @@ function InfoRow({ icon, label, value }) {
 /* ─── Info + Map Section ────────────────────────────────────────── */
 
 function InfoMapSection({ dateParts, event }) {
+  const clay = useClay();
   return (
     <View style={{ flexDirection: "row", marginBottom: 14 }}>
       <View style={{ flex: 1, paddingRight: 10 }}>
@@ -437,6 +430,7 @@ function InfoMapSection({ dateParts, event }) {
 /* ─── About Section ─────────────────────────────────────────────── */
 
 function AboutSection({ description }) {
+  const clay = useClay();
   return (
     <View style={{ backgroundColor: "#F9F8FD", borderRadius: 16, padding: 14, marginBottom: 14 }}>
       <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 8 }}>
@@ -474,6 +468,7 @@ function AboutSection({ description }) {
 /* ─── Going Section ─────────────────────────────────────────────── */
 
 function GoingSection({ attendees }) {
+  const clay = useClay();
   return (
     <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", backgroundColor: "#F9F8FD", borderRadius: 16, padding: 14 }}>
       <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
@@ -501,6 +496,7 @@ function GoingSection({ attendees }) {
 /* ─── Person section ─────────────────────────────────────────── */
 
 function PersonSection({ label, users }) {
+  const clay = useClay();
   return (
     <View style={{ marginTop: 20 }}>
       <Text
@@ -524,6 +520,7 @@ function PersonSection({ label, users }) {
 }
 
 function UserCard({ user }) {
+  const clay = useClay();
   return (
     <View
       style={{
@@ -573,6 +570,7 @@ function UserCard({ user }) {
 /* ─── Bottom bar ─────────────────────────────────────────────── */
 
 function BottomBar({ isHost, onChangeResponse }) {
+  const clay = useClay();
   if (isHost) return null;
 
   return (
@@ -615,6 +613,8 @@ export default function EventDetail() {
   const router = useRouter();
   const { id } = useLocalSearchParams();
   const { getEvent } = useEvents();
+  const clay = useClay();
+  const { isDark } = useTheme();
 
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -683,7 +683,10 @@ export default function EventDetail() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: clay.bg }}>
-      <StatusBar barStyle="dark-content" backgroundColor={clay.bg} />
+      <StatusBar
+        barStyle={isDark ? "light-content" : "dark-content"}
+        backgroundColor={clay.bg}
+      />
 
       <Header
         onBack={() => router.back()}
@@ -749,7 +752,7 @@ export default function EventDetail() {
             <HeroCard event={event} statusLabel={statusLabel} tone={tone} />
 
             {/* Details Container Card */}
-            <ClayCard style={[CARD_BORDER, { marginTop: 14, padding: 14 }]}>
+            <ClayCard style={[{ borderWidth: 2, borderColor: clay.primaryBorder }, { marginTop: 14, padding: 14 }]}>
               {/* Date / Time / Location + Map */}
               <InfoMapSection dateParts={dateParts} event={event} />
 

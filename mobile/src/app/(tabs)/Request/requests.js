@@ -9,9 +9,10 @@ import {
   ClayCard,
   ClayChip,
   SectionTitle,
-  clay,
+  useClay,
   displayName
 } from "../../../components/clay";
+import { useTheme } from "../../../theme/ThemeProvider";
 import { formatPinCode } from "../../../utils/pincode";
 
 // 👉 Add your illustration to: assets/images/requests-empty.png
@@ -210,10 +211,15 @@ function RequestsEmptyState({ router }) {
 export default function Requests() {
   const router = useRouter();
   const { incoming, outgoing, recent, loading, connected } = useRequests();
+  const clay = useClay();
+  const { isDark } = useTheme();
 
   return (
-    <SafeAreaView className="flex-1" style={{ backgroundColor: clay.bg }}>
-      <StatusBar barStyle="dark-content" backgroundColor={clay.bg} />
+      <SafeAreaView className="flex-1" style={{ backgroundColor: clay.bg }}>
+        <StatusBar
+          barStyle={isDark ? "light-content" : "dark-content"}
+          backgroundColor={clay.bg}
+        />
       <ScrollView
         className="flex-1 px-5"
         contentContainerStyle={{ paddingBottom: 120 }}

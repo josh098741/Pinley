@@ -11,6 +11,8 @@ import Animated, {
   useSharedValue,
   withSpring,
 } from "react-native-reanimated";
+import { useTheme } from "../../theme/ThemeProvider";
+import { withAlpha } from "../../theme/palette";
 
 const ACTIVE = "#ffffff";
 const INACTIVE = "#d8cffb";
@@ -19,14 +21,15 @@ const INDICATOR_INSET = 6; // horizontal gap between indicator and tab slot edge
 const AnimatedLinearGradient = Animated.createAnimatedComponent(LinearGradient);
 
 function TabBarIcon({ icon, label, active }) {
+  const { accent } = useTheme();
   return (
     <>
       <Ionicons
         name={active ? icon : `${icon}-outline`}
         size={22}
-        color={active ? ACTIVE : INACTIVE}
+        color={active ? "#ffffff" : accent.tint}
       />
-      <Text style={[styles.tabLabel, { color: active ? ACTIVE : INACTIVE }]}>
+      <Text style={[styles.tabLabel, { color: active ? "#ffffff" : accent.tint }]}>
         {label}
       </Text>
     </>
@@ -34,6 +37,7 @@ function TabBarIcon({ icon, label, active }) {
 }
 
 function GlassBackground() {
+  const { accent } = useTheme();
   if (Platform.OS === "ios") {
     return (
       <BlurView
@@ -43,12 +47,15 @@ function GlassBackground() {
       />
     );
   }
-  return <View style={[StyleSheet.absoluteFill, styles.tabBarBgAndroid]} />;
+  return (
+    <View style={[StyleSheet.absoluteFill, { backgroundColor: withAlpha(accent.deep, 0.95) }]} />
+  );
 }
 
 function CustomTabBar({ state, descriptors, navigation }) {
   const insets = useSafeAreaInsets();
   const [rowWidth, setRowWidth] = useState(0);
+  const { accent } = useTheme();
 
   // Only render routes that expose a tab bar icon. Screens registered with
   // `href: null` (e.g. the create-event flow) are reachable but hidden.
@@ -93,7 +100,7 @@ function CustomTabBar({ state, descriptors, navigation }) {
 
   return (
     <View style={[styles.tabBarWrapper, { bottom: 24 + insets.bottom }]}>
-      <View style={styles.tabBarPill}>
+      <View style={[styles.tabBarPill, { backgroundColor: withAlpha(accent.deep, 0.78) }]}>
         <GlassBackground />
         <View
           style={styles.tabRow}
@@ -101,7 +108,7 @@ function CustomTabBar({ state, descriptors, navigation }) {
         >
           {rowWidth > 0 && (
             <AnimatedLinearGradient
-              colors={["rgba(196,181,253,0.9)", "rgba(124,58,237,0.55)"]}
+              colors={accent.gradient}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={[styles.tabIndicator, indicatorStyle]}

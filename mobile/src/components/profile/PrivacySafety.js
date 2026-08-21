@@ -1,7 +1,8 @@
 import { ActivityIndicator, Alert, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { NavHeader, SectionLabel, Divider, ToggleRow, NavRow, RadioCard, AMBER, PURPLE } from "./common";
+import { NavHeader, SectionLabel, Divider, ToggleRow, NavRow, RadioCard, AMBER } from "./common";
 import { useProfilePrefs } from "../../hooks/useProfilePrefs";
+import { useTheme } from "../../theme/ThemeProvider";
 
 const VISIBILITY_OPTIONS = [
   { key: "everyone", title: "Everyone", description: "Anyone with your PinCode can find and add you" },
@@ -12,6 +13,7 @@ const VISIBILITY_OPTIONS = [
 export default function PrivacySafetyView({ onBack, user }) {
   const insets = useSafeAreaInsets();
   const { prefs, save, saving } = useProfilePrefs(user);
+  const { colors, accent } = useTheme();
   const privacy = prefs.privacy;
 
   const updateVisibility = (key) => {
@@ -33,8 +35,16 @@ export default function PrivacySafetyView({ onBack, user }) {
     Alert.alert("SOS Trusted Contacts", "Manage who gets notified when you trigger an SOS alert.");
   };
 
+  const cardStyle = {
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: 16,
+    backgroundColor: colors.card,
+  };
+
   return (
-    <View className="flex-1 bg-white">
+    <View style={{ flex: 1, backgroundColor: colors.bg }}>
       <NavHeader title="Privacy & Safety" onBack={onBack} />
       <ScrollView
         className="flex-1 px-6 pt-2"
@@ -53,7 +63,7 @@ export default function PrivacySafetyView({ onBack, user }) {
         ))}
 
         <SectionLabel>Safety</SectionLabel>
-        <View className="rounded-2xl border border-slate-200 px-4">
+        <View style={cardStyle}>
           <ToggleRow
             label="Share Live Location on SOS"
             description="Trusted contacts see your real-time location during an active alert"
@@ -74,7 +84,7 @@ export default function PrivacySafetyView({ onBack, user }) {
         </View>
 
         <SectionLabel>General</SectionLabel>
-        <View className="rounded-2xl border border-slate-200 px-4">
+        <View style={cardStyle}>
           <ToggleRow
             label="Ghost Mode"
             description="Hide your location from everyone temporarily"
@@ -101,7 +111,7 @@ export default function PrivacySafetyView({ onBack, user }) {
         </View>
 
         <SectionLabel>Blocked</SectionLabel>
-        <View className="rounded-2xl border border-slate-200 px-4">
+        <View style={cardStyle}>
           <NavRow
             label="Blocked Users"
             sublabel="No one blocked"
@@ -114,8 +124,8 @@ export default function PrivacySafetyView({ onBack, user }) {
 
         {saving ? (
           <View className="mt-4 flex-row items-center gap-2">
-            <ActivityIndicator size="small" color={PURPLE} />
-            <Text className="text-[12px] text-slate-400">Saving…</Text>
+            <ActivityIndicator size="small" color={accent.primary} />
+            <Text style={{ fontSize: 12, color: colors.textFaint }}>Saving…</Text>
           </View>
         ) : null}
       </ScrollView>

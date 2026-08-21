@@ -1,7 +1,8 @@
 import { ActivityIndicator, Linking, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { NavHeader, SectionLabel, Divider, ToggleRow, NavRow, RadioCard, PURPLE } from "./common";
+import { NavHeader, SectionLabel, Divider, ToggleRow, NavRow, RadioCard } from "./common";
 import { useProfilePrefs } from "../../hooks/useProfilePrefs";
+import { useTheme } from "../../theme/ThemeProvider";
 
 const ACCURACY_OPTIONS = [
   { key: "high", title: "High Accuracy", description: "Most precise location, uses more battery" },
@@ -12,6 +13,7 @@ const ACCURACY_OPTIONS = [
 export default function BatteryOptimizationView({ onBack, user }) {
   const insets = useSafeAreaInsets();
   const { prefs, save, saving } = useProfilePrefs(user);
+  const { colors, accent } = useTheme();
   const battery = prefs.battery;
 
   const updateAccuracy = (key) => {
@@ -22,8 +24,16 @@ export default function BatteryOptimizationView({ onBack, user }) {
     save({ battery: { [key]: value } });
   };
 
+  const cardStyle = {
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: 16,
+    backgroundColor: colors.card,
+  };
+
   return (
-    <View className="flex-1 bg-white">
+    <View style={{ flex: 1, backgroundColor: colors.bg }}>
       <NavHeader title="Battery Optimization" onBack={onBack} />
       <ScrollView
         className="flex-1 px-6 pt-2"
@@ -42,7 +52,7 @@ export default function BatteryOptimizationView({ onBack, user }) {
         ))}
 
         <SectionLabel>Behavior</SectionLabel>
-        <View className="rounded-2xl border border-slate-200 px-4">
+        <View style={cardStyle}>
           <ToggleRow
             label="Background Updates"
             description="Keep sharing your location when Pinley isn't open"
@@ -69,7 +79,7 @@ export default function BatteryOptimizationView({ onBack, user }) {
         </View>
 
         <SectionLabel>System</SectionLabel>
-        <View className="rounded-2xl border border-slate-200 px-4">
+        <View style={cardStyle}>
           <NavRow
             label="Device Battery Settings"
             sublabel="Exclude Pinley from system battery optimization"
@@ -82,8 +92,8 @@ export default function BatteryOptimizationView({ onBack, user }) {
 
         {saving ? (
           <View className="mt-4 flex-row items-center gap-2">
-            <ActivityIndicator size="small" color={PURPLE} />
-            <Text className="text-[12px] text-slate-400">Saving…</Text>
+            <ActivityIndicator size="small" color={accent.primary} />
+            <Text style={{ fontSize: 12, color: colors.textFaint }}>Saving…</Text>
           </View>
         ) : null}
       </ScrollView>

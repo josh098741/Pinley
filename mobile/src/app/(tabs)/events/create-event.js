@@ -20,8 +20,6 @@ import * as ImagePicker from "expo-image-picker";
 
 import {
   Avatar,
-  ClayButton,
-  clay,
   displayName,
 } from "../../../components/clay";
 

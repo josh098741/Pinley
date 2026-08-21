@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { ActivityIndicator, Alert, Pressable, ScrollView, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { NavHeader, SectionLabel, Divider, ToggleRow, PURPLE } from "./common";
+import { NavHeader, SectionLabel, Divider, ToggleRow } from "./common";
 import { useProfilePrefs } from "../../hooks/useProfilePrefs";
+import { useTheme } from "../../theme/ThemeProvider";
 
 function formatBytes(bytes) {
   if (!bytes) return "0 MB";
@@ -15,6 +16,7 @@ export default function DataUsageView({ onBack, user }) {
   const { prefs, save, saving } = useProfilePrefs(user);
   const [cacheBytes, setCacheBytes] = useState(48 * 1024 * 1024);
   const [clearing, setClearing] = useState(false);
+  const { colors, accent } = useTheme();
 
   const toggle = (key) => (value) => {
     save({ data: { [key]: value } });
@@ -36,38 +38,55 @@ export default function DataUsageView({ onBack, user }) {
     ]);
   };
 
+  const cardStyle = {
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: 16,
+    backgroundColor: colors.card,
+  };
+
   return (
-    <View className="flex-1 bg-white">
+    <View style={{ flex: 1, backgroundColor: colors.bg }}>
       <NavHeader title="Data Usage" onBack={onBack} />
       <ScrollView
         className="flex-1 px-6 pt-2"
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 60 }}
       >
-        <View className="rounded-2xl bg-slate-50 px-4 py-4">
-          <Text className="text-[12px] font-bold uppercase tracking-widest text-slate-400">
+        <View style={{ ...cardStyle, backgroundColor: colors.soft, paddingVertical: 16 }}>
+          <Text style={{ fontSize: 12, fontWeight: "700", textTransform: "uppercase", letterSpacing: 2, color: colors.textFaint }}>
             Cached Data
           </Text>
-          <Text className="mt-1 text-[24px] font-extrabold text-slate-900">{formatBytes(cacheBytes)}</Text>
-          <Text className="mt-1 text-[13px] text-slate-500">Map tiles, thumbnails, and offline data</Text>
+          <Text style={{ marginTop: 4, fontSize: 24, fontWeight: "800", color: colors.text }}>{formatBytes(cacheBytes)}</Text>
+          <Text style={{ marginTop: 4, fontSize: 13, color: colors.textMuted }}>Map tiles, thumbnails, and offline data</Text>
           <Pressable
             onPress={handleClearCache}
             disabled={clearing || cacheBytes === 0}
-            className="mt-3 flex-row items-center justify-center gap-2 rounded-full bg-slate-900 py-3"
+            style={{
+              marginTop: 12,
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 8,
+              borderRadius: 999,
+              backgroundColor: "#0f172a",
+              paddingVertical: 12,
+            }}
           >
             {clearing ? (
               <ActivityIndicator size="small" color="#fff" />
             ) : (
               <Ionicons name="trash-outline" size={14} color="#fff" />
             )}
-            <Text className="text-[13px] font-bold text-white">
+            <Text style={{ fontSize: 13, fontWeight: "700", color: "#fff" }}>
               {cacheBytes === 0 ? "Cache Cleared" : "Clear Cache"}
             </Text>
           </Pressable>
         </View>
 
         <SectionLabel>Preferences</SectionLabel>
-        <View className="rounded-2xl border border-slate-200 px-4">
+        <View style={cardStyle}>
           <ToggleRow
             label="Reduce Data Usage"
             description="Lower-resolution maps and less frequent background sync"
@@ -95,8 +114,8 @@ export default function DataUsageView({ onBack, user }) {
 
         {saving ? (
           <View className="mt-4 flex-row items-center gap-2">
-            <ActivityIndicator size="small" color={PURPLE} />
-            <Text className="text-[12px] text-slate-400">Saving…</Text>
+            <ActivityIndicator size="small" color={accent.primary} />
+            <Text style={{ fontSize: 12, color: colors.textFaint }}>Saving…</Text>
           </View>
         ) : null}
       </ScrollView>

@@ -9,6 +9,7 @@ import { useMap } from "../../../context/MapContext";
 import { SidePanel } from "../../../components/SidePanel";
 import { getCachedLocation, cacheLocation } from "../../../services/locationCache";
 import { updateUserLocation } from "../../../services/locationApi";
+import { useTheme } from "../../../theme/ThemeProvider";
 
 const PINLEY_REGION = {
   latitude: 37.78825,
@@ -26,6 +27,7 @@ const LOCATION_PUSH_INTERVAL_MS = 15_000;
 
 export default function Home() {
   const { getToken, isSignedIn, sessionId } = useAuth();
+  const { accent } = useTheme();
   const getTokenRef = useRef(getToken);
   getTokenRef.current = getToken;
   const mapRef = useRef(null);
@@ -192,7 +194,7 @@ export default function Home() {
   if (!initialRegion) {
     return (
       <View style={styles.loading}>
-        <ActivityIndicator color="#7C3AED" size="large" />
+        <ActivityIndicator color={accent.primary} size="large" />
       </View>
     );
   }
@@ -212,7 +214,7 @@ export default function Home() {
       {!following ? (
         <Pressable
           onPress={recenter}
-          style={styles.recenterButton}
+          style={[styles.recenterButton, { backgroundColor: accent.primary, shadowColor: accent.deep }]}
           accessibilityRole="button"
           accessibilityLabel="Recenter on my location"
         >
