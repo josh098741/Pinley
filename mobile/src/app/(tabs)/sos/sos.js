@@ -253,9 +253,13 @@ export default function SOS() {
         </View>
 
         {/* Trusted contacts reminder */}
-        <View
+        <TouchableOpacity
+          activeOpacity={0.9}
           className="mt-4 flex-row items-center justify-between rounded-2xl px-4 py-3.5"
           style={{ backgroundColor: clay.primarySoft }}
+          onPress={() => {
+            router.push("/sos/friends");
+          }}
         >
           <View className="flex-row items-center gap-3" style={{ flex: 1 }}>
             <Ionicons name="people" size={20} color={clay.purple} />
@@ -264,12 +268,7 @@ export default function SOS() {
               SOS to work.
             </Text>
           </View>
-          <TouchableOpacity
-            className="flex-row items-center gap-0.5"
-            onPress={() => {
-              router.push("/sos/friends");
-            }}
-          >
+          <View className="flex-row items-center gap-0.5">
             <Text
               className="text-[12px] font-bold"
               style={{ color: clay.purple }}
@@ -277,8 +276,8 @@ export default function SOS() {
               Manage Contacts
             </Text>
             <Ionicons name="chevron-forward" size={14} color={clay.purple} />
-          </TouchableOpacity>
-        </View>
+          </View>
+        </TouchableOpacity>
 
         {/* Bottom fixed CTA */}
         <View className="mt-auto mb-6">

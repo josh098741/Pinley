@@ -74,7 +74,7 @@ export default function TrustedContacts() {
               shadowRadius: 6,
               shadowOffset: { width: 0, height: 2 },
             }}
-            onPress={() => router.back()}
+            onPress={() => router.replace("/sos/sos")}
           >
             <Ionicons name="chevron-back" size={20} color={clay.purple} />
           </TouchableOpacity>
