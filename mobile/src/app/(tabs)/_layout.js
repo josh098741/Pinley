@@ -76,6 +76,7 @@ function CustomTabBar({ state, descriptors, navigation }) {
   }, [activeVisibleIndex, rowWidth]);
 
   const indicatorStyle = useAnimatedStyle(() => ({
+    width: tabWidth - INDICATOR_INSET * 2,
     transform: [{ translateX: translateX.value }],
   }));
 
@@ -103,11 +104,7 @@ function CustomTabBar({ state, descriptors, navigation }) {
               colors={["rgba(196,181,253,0.9)", "rgba(124,58,237,0.55)"]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
-              style={[
-                styles.tabIndicator,
-                { width: tabWidth - INDICATOR_INSET * 2 },
-                indicatorStyle,
-              ]}
+              style={[styles.tabIndicator, indicatorStyle]}
             />
           )}
           {visibleRoutes.map((route, index) => {

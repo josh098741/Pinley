@@ -1,4 +1,5 @@
 import { ActivityIndicator, Linking, ScrollView, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { NavHeader, SectionLabel, Divider, ToggleRow, NavRow, RadioCard, PURPLE } from "./common";
 import { useProfilePrefs } from "../../hooks/useProfilePrefs";
 
@@ -9,6 +10,7 @@ const ACCURACY_OPTIONS = [
 ];
 
 export default function BatteryOptimizationView({ onBack, user }) {
+  const insets = useSafeAreaInsets();
   const { prefs, save, saving } = useProfilePrefs(user);
   const battery = prefs.battery;
 
@@ -26,7 +28,7 @@ export default function BatteryOptimizationView({ onBack, user }) {
       <ScrollView
         className="flex-1 px-6 pt-2"
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 60 }}
+        contentContainerStyle={{ paddingBottom: 110 + insets.bottom }}
       >
         <SectionLabel>Location Accuracy</SectionLabel>
         {ACCURACY_OPTIONS.map((opt) => (

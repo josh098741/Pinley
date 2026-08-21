@@ -1,4 +1,5 @@
 import { ActivityIndicator, ScrollView, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { NavHeader, SectionLabel, Divider, ToggleRow, PURPLE, RED } from "./common";
 import { useProfilePrefs } from "../../hooks/useProfilePrefs";
 
@@ -36,6 +37,7 @@ const NOTIFICATION_GROUPS = [
 ];
 
 export default function NotificationsView({ onBack, user }) {
+  const insets = useSafeAreaInsets();
   const { prefs, save, saving } = useProfilePrefs(user);
   const notifications = prefs.notifications;
 
@@ -53,7 +55,7 @@ export default function NotificationsView({ onBack, user }) {
       <ScrollView
         className="flex-1 px-6 pt-2"
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 60 }}
+        contentContainerStyle={{ paddingBottom: 110 + insets.bottom }}
       >
         <View className="rounded-2xl bg-slate-50 px-4">
           <ToggleRow
