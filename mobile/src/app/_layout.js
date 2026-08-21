@@ -27,7 +27,8 @@ export default function RootLayout() {
                 <Stack.Screen name="index" />
                 <Stack.Screen name="(tabs)" />
                 <Stack.Screen name="setup-check" />
-                <Stack.Screen name="sos" />
+                <Stack.Screen name="sos/sos" />
+                <Stack.Screen name="sos/friends" />
                 <Stack.Screen
                   name="request-search"
                   options={{ presentation: "modal" }}

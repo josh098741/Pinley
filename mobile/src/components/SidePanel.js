@@ -81,7 +81,7 @@ export function SidePanel() {
             <PanelButton
               icon="warning"
               label="SOS"
-              onPress={() => router.push("/sos")}
+              onPress={() => router.push("/sos/sos")}
             />
             <PanelButton
               icon="settings"

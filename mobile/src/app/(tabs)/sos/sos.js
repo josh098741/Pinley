@@ -4,9 +4,9 @@ import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { BlurView } from "expo-blur";
-import { clay } from "../components/clay";
+import { clay } from "../../../components/clay";
 
-const SOS_BACKGROUND = require("../../assets/images/emergency_sos.png");
+const SOS_BACKGROUND = require("../../../../assets/images/emergency_sos.png");
 
 const STEPS = [
   {
@@ -267,7 +267,7 @@ export default function SOS() {
           <TouchableOpacity
             className="flex-row items-center gap-0.5"
             onPress={() => {
-              // 👉 navigate to Settings > Trusted Contacts
+              router.push("/sos/friends");
             }}
           >
             <Text

@@ -84,7 +84,8 @@ function CustomTabBar({ state, descriptors, navigation }) {
   if (
     activeRouteName === "events/index" ||
     activeRouteName === "events/create-event" ||
-    activeRouteName === "events/[id]"
+    activeRouteName === "events/[id]" ||
+    activeRouteName === "sos/sos"
   ) {
     return null;
   }
